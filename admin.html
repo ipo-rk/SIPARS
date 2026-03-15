@@ -1,0 +1,1667 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SIPARS - Dinas Kominfo Deiyai</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>📁</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+
+    <!--
+        FOUC Prevention Script — runs synchronously in <head>.
+        Reads saved theme from localStorage and sets data-theme="light"
+        on <html> so the CSS guard below applies BEFORE Alpine boots.
+        document.body is null here, only documentElement is safe.
+    -->
+    <script>
+        (function () {
+            try {
+                var raw = localStorage.getItem('setting_darkMode');
+                var isDark = raw === null ? true
+                    : (raw === 'false' || raw === '"false"' ? false : JSON.parse(raw));
+                if (!isDark) document.documentElement.setAttribute('data-theme', 'light');
+            } catch (e) { /* default: dark */ }
+        })();
+    </script>
+
+    <style>
+        /* ── FOUC Guard: light background before Alpine boots ── */
+        html[data-theme="light"],
+        html[data-theme="light"] body {
+            background: linear-gradient(160deg, #f0f4ff 0%, #e8edf8 100%) !important;
+            color: #1e293b !important;
+        }
+
+        /*
+         * EVERYTHING ELSE (body, .glass, keyframes, skeleton, etc.)
+         * is defined in style.css — loaded above.
+         * We only define here what style.css cannot:
+         *   1. Sidebar @media positioning (needs to be in <style> for specificity
+         *      before Tailwind classes are processed)
+         *   2. CSS variables defined on :root used by the inline body gradient
+         */
+
+        /* CSS variables — used by body gradient, must be in-page */
+        :root {
+            --bg-primary: #071028;
+            --bg-secondary: #0b1220;
+            --text-primary: #d1d5db;
+        }
+
+        body.light-mode {
+            --bg-primary: #f0f4ff;
+            --bg-secondary: #e8edf8;
+            --text-primary: #1e293b;
+        }
+
+        /* Sidebar positioning — MUST be in inline <style> to override
+           Tailwind's static/translate classes with correct z-index stacking */
+        @media (max-width: 1023px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                z-index: 40;
+                overflow-y: auto;
+                max-width: min(18rem, 85vw);
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased" x-data="app()" x-init="init()" x-cloak>
+
+    <!-- ═══════════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════════ -->
+    <header
+        class="glass sticky top-2 sm:top-4 z-30 mx-2 sm:mx-auto max-w-7xl sm:px-6 px-3 py-2.5 rounded-xl sm:rounded-2xl shadow-xl border border-white/6 mt-2 sm:mt-4">
+        <div class="flex items-center justify-between gap-2">
+
+            <!-- LEFT: hamburger + logo + search -->
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+                <button class="lg:hidden flex-shrink-0 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition"
+                    @click="sidebarOpen=!sidebarOpen">
+                    <i class="fa fa-bars text-white/80"></i>
+                </button>
+                <div class="text-base font-semibold flex items-center gap-2 flex-shrink-0">
+                    <span class="text-xl">📁</span>
+                    <span class="hidden xs:inline text-white">SIPARS</span>
+                </div>
+                <!-- Search — only on md+ -->
+                <div class="hidden md:block ml-4 flex-1 max-w-sm lg:max-w-md">
+                    <div class="relative">
+                        <input x-model="query" @input="updateSearchSuggestions()"
+                            @focus="showSearchDropdown=query.length>0" @keydown.enter="executeSearch()" type="search"
+                            placeholder="Cari arsip, judul, kode..."
+                            class="pl-9 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-indigo-500 w-full text-sm" />
+                        <i class="fa fa-search absolute left-3 top-2.5 text-white/50 text-sm"></i>
+                        <!-- Search dropdown -->
+                        <div x-show="shouldShowSearch()" @click.away="showSearchDropdown=false" x-transition
+                            class="absolute top-11 left-0 w-full glass rounded-lg shadow-lg border border-white/10 z-50 max-h-72 overflow-y-auto"
+                            style="background-color:#071028;">
+                            <template x-if="searchSuggestions.length>0">
+                                <div class="border-b border-white/10">
+                                    <p class="text-xs text-white/60 px-3 pt-2 font-semibold">Saran Pencarian</p>
+                                    <template x-for="s in searchSuggestions" :key="s.text">
+                                        <button @click="query=s.text;executeSearch()"
+                                            class="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition flex items-center gap-2">
+                                            <span x-text="s.icon"></span>
+                                            <div>
+                                                <p x-text="s.text"></p>
+                                                <p class="text-xs text-white/50" x-text="s.type"></p>
+                                            </div>
+                                        </button>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="showRecentSearches()">
+                                <div>
+                                    <p class="text-xs text-white/60 px-3 pt-2 font-semibold">Pencarian Terakhir</p>
+                                    <template x-for="r in recentSearches.slice(0,5)" :key="r">
+                                        <button @click="query=r;executeSearch()"
+                                            class="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-white/10">
+                                            <i class="fa fa-history mr-2 text-white/50"></i><span x-text="r"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="savedSearchFilters.length>0">
+                                <div>
+                                    <p class="text-xs text-white/60 px-3 pt-2 font-semibold">Filter Tersimpan</p>
+                                    <template x-for="f in savedSearchFilters.slice(0,3)" :key="f.id">
+                                        <button @click="applySavedFilter(f.id)"
+                                            class="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition flex items-center justify-between">
+                                            <span><i class="fa fa-bookmark mr-2 text-yellow-400"></i><span
+                                                    x-text="f.name"></span></span>
+                                            <button @click.stop="deleteSavedFilter(f.id)"
+                                                class="text-red-400 hover:text-red-300 text-xs"><i
+                                                    class="fa fa-trash"></i></button>
+                                        </button>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: action buttons — flex-shrink-0 so they never wrap -->
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+
+                <!-- Tambah Arsip — full label on sm+, icon-only on xs -->
+                <button @click="openAddModal()"
+                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-br from-indigo-600 to-sky-500 text-white shadow text-sm font-medium whitespace-nowrap">
+                    <i class="fa fa-plus text-xs"></i>
+                    <span class="hidden sm:inline">Tambah Arsip</span>
+                </button>
+
+                <!-- Widget manager — hidden on xs to save space -->
+                <button @click="toggleWidgetManager()"
+                    class="hidden sm:flex p-2 rounded-lg bg-white/5 hover:bg-white/10 transition" title="Atur Widget">
+                    <i class="fa fa-sliders text-purple-400 text-sm"></i>
+                </button>
+
+                <!-- Context Help — hidden on xs -->
+                <button @click="toggleContextHelp()"
+                    class="hidden sm:flex p-2 rounded-lg bg-white/5 hover:bg-white/10 transition" title="Bantuan">
+                    <i class="fa fa-circle-question text-cyan-400 text-sm"></i>
+                </button>
+
+                <!-- Mobile search toggle — only on xs/sm where search bar is hidden -->
+                <button @click="mobileSearchOpen=!mobileSearchOpen"
+                    class="md:hidden p-2 rounded-lg bg-white/5 hover:bg-white/10 transition" title="Cari">
+                    <i :class="mobileSearchOpen ? 'fa fa-times' : 'fa fa-search'" class="text-white/70 text-sm"></i>
+                </button>
+
+                <!-- Dark/Light toggle -->
+                <button @click="toggleTheme()" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition"
+                    :title="settings.darkMode ? 'Mode Terang' : 'Mode Gelap'">
+                    <i :class="settings.darkMode ? 'fa fa-sun' : 'fa fa-moon'" class="text-yellow-400 text-sm"></i>
+                </button>
+
+                <!-- Notification Bell -->
+                <div x-data="{notifOpen:false}" class="relative">
+                    <button @click="notifOpen=!notifOpen"
+                        class="relative p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+                        <i class="fa fa-bell text-white/80 text-sm"></i>
+                        <span x-show="unreadCount>0" x-text="unreadCount"
+                            class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none"></span>
+                    </button>
+
+                    <!-- Notification Dropdown -->
+                    <div x-show="notifOpen" @click.away="notifOpen=false"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                        class="notif-dropdown absolute top-full mt-2 rounded-xl shadow-2xl border border-white/10 overflow-hidden z-[9999]"
+                        style="max-height:min(28rem, calc(100dvh - 5rem)); overflow-y:auto; background-color:#071028 !important; transform-origin:top right;">
+
+                        <!-- Header -->
+                        <div class="sticky top-0 z-10 px-3 py-2.5 border-b border-white/10 flex items-center justify-between"
+                            style="background-color:#0b1220 !important;">
+                            <div class="flex items-center gap-2">
+                                <i class="fa fa-bell text-indigo-400 text-xs"></i>
+                                <h3 class="font-semibold text-white text-sm">Notifikasi</h3>
+                                <span x-show="unreadCount>0" x-text="unreadCount"
+                                    class="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold leading-none"></span>
+                            </div>
+                            <button @click="clearAllNotifications()"
+                                class="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded-lg transition">
+                                <i class="fa fa-trash text-xs"></i>
+                                <span>Hapus</span>
+                            </button>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="divide-y divide-white/10">
+
+                            <!-- Empty State -->
+                            <template x-if="notifications.length===0">
+                                <div class="flex flex-col items-center justify-center py-10 px-4 text-center">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
+                                        <i class="fa fa-bell-slash text-white/30 text-xl"></i>
+                                    </div>
+                                    <p class="text-white/60 text-sm font-medium">Tidak ada notifikasi</p>
+                                    <p class="text-white/30 text-xs mt-1">Semua notifikasi akan muncul di sini</p>
+                                </div>
+                            </template>
+
+                            <!-- Notification Items -->
+                            <template x-for="n in notifications" :key="n.id">
+                                <div :style="n.read ? 'background-color:rgba(255,255,255,0.02)' : 'background-color:rgba(30,58,138,0.2)'"
+                                    class="px-3 py-2.5 hover:bg-white/5 transition-colors duration-150 cursor-default">
+                                    <div class="flex items-start gap-2.5">
+
+                                        <!-- Icon -->
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5"
+                                            style="background-color:rgba(255,255,255,0.08)">
+                                            <span class="text-base leading-none" x-text="n.icon"></span>
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-start justify-between gap-1">
+                                                <p class="font-semibold text-white text-xs leading-snug truncate pr-1"
+                                                    x-text="n.title"></p>
+                                                <span x-show="!n.read"
+                                                    class="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400 mt-1"></span>
+                                            </div>
+                                            <p class="text-xs text-white/70 mt-0.5 leading-relaxed line-clamp-2"
+                                                x-text="n.message"></p>
+                                            <p class="text-xs text-white/40 mt-1 flex items-center gap-1">
+                                                <i class="fa fa-clock text-[10px]"></i>
+                                                <span x-text="n.time"></span>
+                                            </p>
+                                        </div>
+
+                                        <!-- Actions -->
+                                        <div class="flex flex-col gap-1 flex-shrink-0">
+                                            <button @click.stop="n.read ? markAsUnread(n.id) : markAsRead(n.id)"
+                                                class="p-1 text-white/50 hover:text-white transition"
+                                                :title="n.read ? 'Belum dibaca' : 'Dibaca'">
+                                                <i :class="n.read ? 'fa fa-envelope' : 'fa fa-envelope-open'"
+                                                    class="text-xs"></i>
+                                            </button>
+                                            <button @click.stop="deleteNotification(n.id)"
+                                                class="p-1 text-white/60 hover:text-red-400 transition" title="Hapus">
+                                                <i class="fa fa-xmark text-xs"></i>
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </template>
+
+                        </div>
+
+                        <!-- Footer -->
+                        <template x-if="notifications.length > 0">
+                            <div class="sticky bottom-0 px-3 py-2 border-t border-white/10"
+                                style="background-color:#0b1220 !important;">
+                                <button @click="notifications.forEach(n => markAsRead(n.id))"
+                                    class="w-full text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5">
+                                    <i class="fa fa-check-double text-xs"></i>
+                                    Tandai semua dibaca
+                                </button>
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+
+                <!-- User Dropdown -->
+                <div x-data="{open:false}" class="relative">
+                    <button @click="open=!open"
+                        class="flex items-center gap-2 bg-white/10 glass px-3 py-2 rounded-lg hover:bg-white/20 transition">
+                        <div class="relative">
+                            <div
+                                class="rounded-full w-8 h-8 bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
+                                <span x-text="roleEmojis[currentRole]||'👤'"></span>
+                            </div>
+                            <span
+                                class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                        </div>
+                        <div class="text-sm font-medium text-white hidden sm:block" x-text="currentRole"></div>
+                        <svg class="w-4 h-4 text-white transition-transform" :class="{'rotate-180':open}" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" @click.away="open=false" x-transition
+                        class="absolute right-0 mt-2 glass rounded-xl shadow-lg border border-white/10 z-50"
+                        style="width:min(14rem,calc(100vw - 1rem)); background-color:#071028;">
+                        <div class="px-4 py-3 border-b border-indigo-500/50 bg-indigo-900/20">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl" x-text="roleEmojis[currentRole]"></span>
+                                <div>
+                                    <p class="font-semibold text-white text-sm" x-text="currentRole"></p>
+                                    <p class="text-xs text-white/70 leading-tight" x-text="currentRoleDescription"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#" @click.prevent="view='profil';open=false;updateBreadcrumb('profil')"
+                            class="block px-4 py-2 text-sm text-white/80 hover:bg-white/10"><i
+                                class="fa fa-user-circle mr-2"></i>Profil</a>
+                        <a href="#" @click.prevent="view='pengaturan';open=false;updateBreadcrumb('pengaturan')"
+                            class="block px-4 py-2 text-sm text-white/80 hover:bg-white/10"><i
+                                class="fa fa-cog mr-2"></i>Pengaturan</a>
+                        <div class="border-t border-white/10"></div>
+                        <a href="#" @click.prevent="logout()"
+                            class="block px-4 py-2 text-sm text-red-400 hover:bg-red-600/20"><i
+                                class="fa fa-sign-out mr-2"></i>Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Search Bar — slides in below header on xs/sm -->
+    <div x-show="mobileSearchOpen" x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 -translate-y-2"
+        class="md:hidden mx-2 mt-2 px-3 py-2.5 glass rounded-xl border border-white/10 z-20 relative">
+        <div class="relative">
+            <i class="fa fa-search absolute left-3 top-2.5 text-white/50 text-sm pointer-events-none"></i>
+            <input x-model="query" @input="updateSearchSuggestions()"
+                @keydown.enter="executeSearch(); mobileSearchOpen=false" @keydown.escape="mobileSearchOpen=false"
+                type="search" placeholder="Cari arsip, judul, kode..."
+                class="w-full pl-9 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-white/40 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+                x-ref="mobileSearch" />
+            <button @click="executeSearch(); mobileSearchOpen=false"
+                class="absolute right-2 top-1.5 px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition">Cari</button>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 mt-3 sm:mt-4">
+        <nav class="flex items-center gap-2 text-sm text-white/70 flex-wrap">
+            <template x-for="(crumb,idx) in breadcrumbs" :key="idx">
+                <div class="flex items-center gap-2">
+                    <button @click="onViewChange(crumb.view)"
+                        :class="idx===breadcrumbs.length-1?'text-white font-semibold':'text-white/70 hover:text-white'"
+                        class="transition text-sm">
+                        <i class="fa fa-folder mr-1"></i><span x-text="crumb.label"></span>
+                    </button>
+                    <span x-show="idx<breadcrumbs.length-1" class="text-white/40">/</span>
+                </div>
+            </template>
+        </nav>
+        <div x-show="showContextHelp" x-transition
+            class="mt-3 p-3 sm:p-4 glass rounded-lg border border-cyan-500/30 bg-cyan-900/10">
+            <div class="flex items-start justify-between gap-2">
+                <p class="text-xs sm:text-sm text-cyan-300"
+                    x-html="`<i class='fa fa-lightbulb mr-2'></i>`+contextHelpText"></p>
+                <button @click="toggleContextHelp()" class="text-cyan-400 hover:text-cyan-300 flex-shrink-0"><i
+                        class="fa fa-times"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+     LAYOUT: sidebar + main
+═══════════════════════════════════════════════ -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 mt-4 sm:mt-6 flex gap-4 sm:gap-6 pb-12 layout-row">
+
+        <!-- SIDEBAR -->
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+            class="sidebar glass p-4 w-64 lg:w-72 rounded-r-2xl lg:rounded-2xl border border-white/5 transform transition-transform duration-300 lg:static lg:translate-x-0 flex-shrink-0 overflow-y-auto">
+
+            <!-- Sidebar header with close on mobile -->
+            <div class="mb-5 flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-white text-base">Menu</h3>
+                    <p class="text-xs text-white/60 mt-0.5">Role: <span class="text-indigo-400 font-semibold"
+                            x-text="currentRole"></span></p>
+                </div>
+                <button class="lg:hidden p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition text-white/60"
+                    @click="sidebarOpen=false">
+                    <i class="fa fa-times text-sm"></i>
+                </button>
+            </div>
+            <nav class="space-y-1 text-sm">
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition"
+                    :class="{'bg-gradient-to-r from-indigo-600 to-sky-500 text-white':view==='dashboard'}"
+                    @click.prevent="onViewChange('dashboard');sidebarOpen=false"><i
+                        class="fa fa-home w-4"></i>Dashboard</a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition"
+                    :class="{'bg-gradient-to-r from-indigo-600 to-sky-500 text-white':view==='arsip'}"
+                    @click.prevent="onViewChange('arsip');sidebarOpen=false"><i class="fa fa-folder w-4"></i>Arsip</a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition"
+                    :class="{'bg-gradient-to-r from-indigo-600 to-sky-500 text-white':view==='peminjaman'}"
+                    @click.prevent="onViewChange('peminjaman');sidebarOpen=false"><i
+                        class="fa fa-handshake w-4"></i>Peminjaman</a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition"
+                    :class="{'bg-gradient-to-r from-indigo-600 to-sky-500 text-white':view==='laporan'}"
+                    @click.prevent="onViewChange('laporan');sidebarOpen=false"><i
+                        class="fa fa-file-invoice w-4"></i>Laporan</a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition"
+                    x-show="hasPermission('userMgmt')"
+                    :class="{'bg-gradient-to-r from-indigo-600 to-sky-500 text-white':view==='pengguna'}"
+                    @click.prevent="onViewChange('pengguna');sidebarOpen=false"><i
+                        class="fa fa-users w-4"></i>Pengguna</a>
+                <hr class="my-2 border-white/6" />
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition"
+                    :class="{'bg-gradient-to-r from-indigo-600 to-sky-500 text-white':view==='profil'}"
+                    @click.prevent="onViewChange('profil');sidebarOpen=false"><i class="fa fa-user w-4"></i>Profil</a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition"
+                    :class="{'bg-gradient-to-r from-indigo-600 to-sky-500 text-white':view==='pengaturan'}"
+                    @click.prevent="onViewChange('pengaturan');sidebarOpen=false"><i
+                        class="fa fa-cog w-4"></i>Pengaturan</a>
+            </nav>
+            <hr class="my-4 border-white/6" />
+            <!-- Role Simulator -->
+            <div class="text-xs">
+                <label class="block mb-2 font-semibold text-white uppercase tracking-wide">🎭 Simulasi Role</label>
+                <div class="space-y-1.5">
+                    <template x-for="r in roles" :key="r">
+                        <button @click="currentRole=r;applyRole()"
+                            :class="currentRole===r?'ring-2 ring-indigo-500 bg-indigo-600/40':'bg-white/5 hover:bg-white/10'"
+                            class="w-full p-2 rounded-lg text-left transition border border-white/10">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base" x-text="roleEmojis[r]"></span>
+                                <div>
+                                    <div class="font-semibold text-white text-xs" x-text="r"></div>
+                                    <div class="text-white/50 text-xs"
+                                        x-text="r==='Admin Utama'?'Akses penuh':r==='Operator Kominfo'?'Kelola dokumen':r==='User Unit'?'Lihat & pinjam':'Baca saja'">
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+                <p class="text-blue-300 mt-3 p-2 bg-blue-600/20 rounded-lg border border-blue-500/30">
+                    <i class="fa fa-info-circle mr-1"></i>
+                    <span x-text="'Role aktif: '+currentRole"></span>
+                </p>
+            </div>
+        </aside>
+
+        <!-- SIDEBAR OVERLAY (mobile) -->
+        <div x-show="sidebarOpen" @click="sidebarOpen=false" class="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            x-transition:enter="transition-opacity duration-200" x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity duration-200"
+            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
+
+        <!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+        <!-- min-w-0 is CRITICAL — without it, flex child won't shrink below its content size -->
+        <main class="flex-1 min-w-0 overflow-hidden">
+
+            <!-- ── DASHBOARD ── -->
+            <section x-show="view==='dashboard'" x-cloak>
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white">Dashboard</h2>
+                    <p class="text-white/60 text-sm mt-1">Selamat datang, <span class="text-indigo-400 font-medium"
+                            x-text="currentRole"></span></p>
+                </div>
+
+                <!-- Stats -->
+                <template x-if="widgets.find(w=>w.id==='stats')?.visible">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                        <div class="p-6 rounded-2xl glass shadow-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-sm text-white/70">Total Arsip</div>
+                                <span class="text-blue-400 text-2xl">📄</span>
+                            </div>
+                            <div class="text-3xl font-bold text-white" x-text="stats.total"></div>
+                            <div class="text-xs text-white/50 mt-1">Semua dokumen terdaftar</div>
+                        </div>
+                        <div class="p-6 rounded-2xl glass shadow-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-sm text-white/70">Arsip Baru (30 Hari)</div>
+                                <span class="text-green-400 text-2xl">🆕</span>
+                            </div>
+                            <div class="text-3xl font-bold text-white" x-text="stats.new30"></div>
+                            <div class="text-xs text-white/50 mt-1">Upload terbaru</div>
+                        </div>
+                        <div class="p-6 rounded-2xl glass shadow-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-sm text-white/70">Menunggu Verifikasi</div>
+                                <span class="text-amber-400 text-2xl">⏳</span>
+                            </div>
+                            <div class="text-3xl font-bold text-white" x-text="stats.pending"></div>
+                            <div class="text-xs text-white/50 mt-1">Perlu pemeriksaan</div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Charts Row -->
+                <div class="grid gap-5 mb-5" :class="chartGridClass()">
+                    <template x-if="widgets.find(w=>w.id==='trend')?.visible">
+                        <div :class="widgets.find(w=>w.id==='status')?.visible?'lg:col-span-2':'lg:col-span-3'"
+                            class="p-6 rounded-2xl glass shadow-lg">
+                            <h4 class="font-semibold text-white mb-4">📈 Trend Upload (30 Hari Terakhir)</h4>
+                            <div style="position:relative;width:100%;height:300px;"><canvas id="chartUploads"></canvas>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="widgets.find(w=>w.id==='status')?.visible">
+                        <div class="p-6 rounded-2xl glass shadow-lg">
+                            <h4 class="font-semibold text-white mb-4">📊 Distribusi Status</h4>
+                            <div style="position:relative;width:100%;height:300px;"><canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Bottom Row -->
+                <div class="grid gap-5" :class="bottomWidgetGridClass()">
+                    <template x-if="widgets.find(w=>w.id==='categories')?.visible">
+                        <div class="p-6 rounded-2xl glass shadow-lg">
+                            <h4 class="font-semibold text-white mb-3">🎯 Top Kategori</h4>
+                            <ul class="space-y-2" x-html="topCategoriesHtml"></ul>
+                        </div>
+                    </template>
+                    <template x-if="widgets.find(w=>w.id==='downloads')?.visible">
+                        <div class="p-6 rounded-2xl glass shadow-lg">
+                            <h4 class="font-semibold text-white mb-3">🔥 Most Downloaded</h4>
+                            <div class="space-y-3">
+                                <template x-for="item in items.sort((a,b)=>b.downloads-a.downloads).slice(0,5)"
+                                    :key="item.id">
+                                    <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg">
+                                        <span class="text-white text-sm truncate mr-2" x-text="item.title"></span>
+                                        <span class="text-indigo-400 font-bold text-sm shrink-0"
+                                            x-text="item.downloads+' dl'"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <!-- ── ARSIP ── -->
+            <section x-show="view==='arsip'" x-cloak class="mt-2">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <h3 class="text-xl font-semibold text-white">📂 Daftar Arsip</h3>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button @click="toggleAdvancedFilter()"
+                            class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm"><i
+                                class="fa fa-filter mr-1"></i>Filter</button>
+                        <button @click="toggleExportModal()"
+                            class="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm"><i
+                                class="fa fa-download mr-1"></i>Export</button>
+                        <button @click="exportStatistics()"
+                            class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"><i
+                                class="fa fa-chart-bar mr-1"></i>Statistik</button>
+                        <button @click="saveCurrentFilter()"
+                            class="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm"><i
+                                class="fa fa-bookmark mr-1"></i>Simpan Filter</button>
+                        <span class="text-sm text-white/60">(<span x-text="filtered.length"></span> hasil)</span>
+                    </div>
+                </div>
+
+                <!-- Advanced Filter -->
+                <div x-show="showAdvancedFilter" x-transition class="mb-4 p-4 glass rounded-2xl border border-white/10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                        <div>
+                            <label class="text-xs text-white/70 block mb-1">Status</label>
+                            <select x-model="currentFilter.status"
+                                class="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                                <option value="">Semua Status</option>
+                                <template x-for="s in statuses">
+                                    <option :value="s" class="text-black" x-text="s"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-white/70 block mb-1">Kategori</label>
+                            <select x-model="currentFilter.category"
+                                class="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                                <option value="">Semua Kategori</option>
+                                <template x-for="c in categories">
+                                    <option :value="c" class="text-black" x-text="c"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-white/70 block mb-1">Kode / Pengunggah</label>
+                            <input x-model="currentFilter.author" type="text" placeholder="Cari kode/pengunggah..."
+                                class="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10 text-sm" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-white/70 block mb-1">Tahun</label>
+                            <input x-model="currentFilter.dateRange" type="number" placeholder="Contoh: 2025" min="2020"
+                                max="2030"
+                                class="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10 text-sm" />
+                        </div>
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                        <button @click="applyAdvancedFilter()"
+                            class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm"><i
+                                class="fa fa-check mr-1"></i>Terapkan</button>
+                        <button @click="clearAdvancedFilter()"
+                            class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"><i
+                                class="fa fa-times mr-1"></i>Reset</button>
+                        <button @click="saveFilterPreset()"
+                            x-show="currentFilter.status||currentFilter.category||currentFilter.author"
+                            class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm"><i
+                                class="fa fa-save mr-1"></i>Simpan Preset</button>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl overflow-x-auto glass">
+                    <table class="table-arsip min-w-full table-auto text-sm">
+                        <thead class="bg-white/5 text-left text-white/70">
+                            <tr>
+                                <th class="px-4 py-3">#</th>
+                                <th class="px-4 py-3">Judul</th>
+                                <th class="px-4 py-3">Kode</th>
+                                <th class="px-4 py-3">Kategori</th>
+                                <th class="px-4 py-3">Tahun</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-white/90">
+                            <template x-if="paginated.length===0">
+                                <tr>
+                                    <td colspan="7" class="text-center text-white/50 py-8">Tidak ada arsip ditemukan.
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-for="(a,i) in paginated" :key="a.id">
+                                <tr class="border-t border-white/6 hover:bg-white/5 transition">
+                                    <td class="px-4 py-3 text-white/60" x-text="i+1+(page-1)*perPage"></td>
+                                    <td class="px-4 py-3 font-medium max-w-xs truncate" x-text="a.title"></td>
+                                    <td class="px-4 py-3 text-indigo-400 font-mono text-xs" x-text="a.code"></td>
+                                    <td class="px-4 py-3" x-text="a.category"></td>
+                                    <td class="px-4 py-3" x-text="a.year"></td>
+                                    <td class="px-4 py-3">
+                                        <span
+                                            :class="{'text-emerald-400':a.status==='Disetujui','text-amber-400':a.status==='Menunggu Verifikasi','text-slate-400':a.status==='Draft','text-red-400':a.status==='Ditolak'}"
+                                            x-text="a.status"></span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex gap-1">
+                                            <button @click="preview(a)"
+                                                class="px-2 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 transition"
+                                                title="Lihat"><i class="fa fa-eye"></i></button>
+                                            <button x-show="hasPermission('update')" @click="edit(a)"
+                                                class="px-2 py-1 text-xs rounded bg-yellow-600 hover:bg-yellow-700 transition"
+                                                title="Edit"><i class="fa fa-pencil"></i></button>
+                                            <button x-show="hasPermission('borrow')" @click="addBorrowing(a)"
+                                                class="px-2 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 transition"
+                                                title="Pinjam"><i class="fa fa-share"></i></button>
+                                            <button @click="download(a)"
+                                                class="px-2 py-1 text-xs rounded bg-green-600 hover:bg-green-700 transition"
+                                                title="Download"><i class="fa fa-download"></i></button>
+                                            <button x-show="hasPermission('delete')" @click="delete(a.id)"
+                                                class="px-2 py-1 text-xs rounded bg-red-700 hover:bg-red-800 transition"
+                                                title="Hapus"><i class="fa fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <div
+                        class="flex justify-between items-center px-4 py-3 border-t border-white/6 text-white/60 text-sm">
+                        <span>Halaman <span x-text="page"></span> dari <span x-text="totalPages"></span> | <span
+                                x-text="filtered.length"></span> item</span>
+                        <div class="flex gap-2">
+                            <button :disabled="page<=1" @click="page--"
+                                class="px-3 py-1 rounded bg-white/5 disabled:opacity-40 hover:bg-white/10 transition">Prev</button>
+                            <button :disabled="page>=totalPages" @click="page++"
+                                class="px-3 py-1 rounded bg-white/5 disabled:opacity-40 hover:bg-white/10 transition">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── PEMINJAMAN ── -->
+            <section x-show="view==='peminjaman'" x-cloak class="mt-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-white">📋 Daftar Peminjaman</h3>
+                    <button x-show="hasPermission('borrow')" @click="openBorrowModal()"
+                        class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm"><i
+                            class="fa fa-plus mr-1"></i>Pinjam Dokumen</button>
+                </div>
+                <div class="mb-4 p-4 glass rounded-2xl border border-white/10">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-xs text-white/70 block mb-1">Status</label>
+                            <select x-model="borrowingFilter.status"
+                                class="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                                <option value="">Semua</option>
+                                <template x-for="s in borrowingStatuses">
+                                    <option :value="s" class="text-black" x-text="s"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-white/70 block mb-1">Peminjam</label>
+                            <input x-model="borrowingFilter.user" type="text" placeholder="Cari nama peminjam..."
+                                class="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10 text-sm" />
+                        </div>
+                        <div class="flex items-end">
+                            <button @click="borrowingFilter={status:'',user:''}"
+                                class="w-full px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm"><i
+                                    class="fa fa-rotate-left mr-1"></i>Reset</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="rounded-2xl overflow-x-auto glass">
+                    <table class="table-peminjaman w-full text-sm">
+                        <thead class="bg-white/5 text-white/70">
+                            <tr>
+                                <th class="px-4 py-3 text-left">#</th>
+                                <th class="px-4 py-3 text-left">Dokumen</th>
+                                <th class="px-4 py-3 text-left">Peminjam</th>
+                                <th class="px-4 py-3 text-left">Tgl Pinjam</th>
+                                <th class="px-4 py-3 text-left">Tgl Kembali</th>
+                                <th class="px-4 py-3 text-left">Status</th>
+                                <th class="px-4 py-3 text-left">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-white/90">
+                            <template x-if="borrowingPaginated.length===0">
+                                <tr>
+                                    <td colspan="7" class="px-4 py-8 text-center text-white/50">Tidak ada data
+                                        peminjaman</td>
+                                </tr>
+                            </template>
+                            <template x-for="(b,i) in borrowingPaginated" :key="b.id">
+                                <tr class="border-t border-white/6 hover:bg-white/5 transition">
+                                    <td class="px-4 py-3 text-white/60" x-text="(borrowingPage-1)*borrowingPerPage+i+1">
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium" x-text="b.archiveTitle"></div>
+                                        <div class="text-xs text-indigo-400 font-mono" x-text="b.archiveCode"></div>
+                                    </td>
+                                    <td class="px-4 py-3" x-text="b.borrower"></td>
+                                    <td class="px-4 py-3" x-text="b.borrowDate"></td>
+                                    <td class="px-4 py-3" x-text="b.returnDate"></td>
+                                    <td class="px-4 py-3">
+                                        <span
+                                            :class="{'bg-yellow-500/20 text-yellow-300':b.status==='Pending','bg-green-500/20 text-green-300':b.status==='Disetujui','bg-blue-500/20 text-blue-300':b.status==='Dikembalikan','bg-red-500/20 text-red-300':b.status==='Ditolak'}"
+                                            class="px-2 py-1 rounded text-xs" x-text="b.status"></span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex gap-1">
+                                            <button x-show="canVerify(b)" @click="approveBorrowing(b.id)"
+                                                class="px-2 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-xs"
+                                                title="Setujui"><i class="fa fa-check"></i></button>
+                                            <button x-show="canVerify(b)" @click="rejectBorrowing(b.id)"
+                                                class="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs"
+                                                title="Tolak"><i class="fa fa-ban"></i></button>
+                                            <button x-show="b.status==='Disetujui'" @click="returnBorrowing(b.id)"
+                                                class="px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                                                title="Kembalikan"><i class="fa fa-undo"></i></button>
+                                            <button x-show="b.status==='Pending'||currentRole==='Admin Utama'"
+                                                @click="editBorrowing(b)"
+                                                class="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+                                                title="Edit"><i class="fa fa-edit"></i></button>
+                                            <button x-show="hasPermission('delete')" @click="deleteBorrowing(b.id)"
+                                                class="px-2 py-1 rounded bg-gray-600 hover:bg-gray-700 text-white text-xs"
+                                                title="Hapus"><i class="fa fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <div
+                        class="flex justify-between items-center px-4 py-3 border-t border-white/6 text-white/60 text-sm">
+                        <span>Halaman <span x-text="borrowingPage"></span> dari <span
+                                x-text="borrowingTotalPages"></span></span>
+                        <div class="flex gap-2">
+                            <button :disabled="borrowingPage<=1" @click="borrowingPage--"
+                                class="px-3 py-1 rounded bg-white/5 disabled:opacity-40 hover:bg-white/10">Prev</button>
+                            <button :disabled="borrowingPage>=borrowingTotalPages" @click="borrowingPage++"
+                                class="px-3 py-1 rounded bg-white/5 disabled:opacity-40 hover:bg-white/10">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── LAPORAN ── -->
+            <section x-show="view==='laporan'" x-cloak class="mt-2">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-white">📊 Laporan & Statistik</h3>
+                    <button @click="exportStatistics()"
+                        class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm"><i
+                            class="fa fa-download mr-1"></i>Export CSV</button>
+                </div>
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="p-4 rounded-2xl glass text-center">
+                        <div class="text-2xl font-bold text-white" x-text="items.length"></div>
+                        <div class="text-xs text-white/60 mt-1">Total Arsip</div>
+                    </div>
+                    <div class="p-4 rounded-2xl glass text-center">
+                        <div class="text-2xl font-bold text-emerald-400"
+                            x-text="items.filter(i=>i.status==='Disetujui').length"></div>
+                        <div class="text-xs text-white/60 mt-1">Disetujui</div>
+                    </div>
+                    <div class="p-4 rounded-2xl glass text-center">
+                        <div class="text-2xl font-bold text-amber-400"
+                            x-text="items.filter(i=>i.status==='Menunggu Verifikasi').length"></div>
+                        <div class="text-xs text-white/60 mt-1">Menunggu Verifikasi</div>
+                    </div>
+                    <div class="p-4 rounded-2xl glass text-center">
+                        <div class="text-2xl font-bold text-indigo-400" x-text="borrowings.length"></div>
+                        <div class="text-xs text-white/60 mt-1">Total Peminjaman</div>
+                    </div>
+                </div>
+                <!-- Borrowing Status -->
+                <div class="grid md:grid-cols-2 gap-5 mb-5">
+                    <div class="p-5 rounded-2xl glass">
+                        <h4 class="font-semibold text-white mb-4">📋 Status Peminjaman</h4>
+                        <div class="space-y-3">
+                            <template x-for="s in borrowingStatuses" :key="s">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-white/80 text-sm" x-text="s"></span>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-32 h-2 rounded-full bg-white/10">
+                                            <div class="h-2 rounded-full bg-indigo-500"
+                                                :style="`width:${borrowings.length?((borrowings.filter(b=>b.status===s).length/borrowings.length)*100)+'%':'0%'}`">
+                                            </div>
+                                        </div>
+                                        <span class="text-indigo-400 font-bold text-sm w-6 text-right"
+                                            x-text="borrowings.filter(b=>b.status===s).length"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="p-5 rounded-2xl glass">
+                        <h4 class="font-semibold text-white mb-4">📁 Arsip per Kategori</h4>
+                        <div class="space-y-3">
+                            <template x-for="cat in categories" :key="cat">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-white/80 text-sm truncate mr-2" x-text="cat"></span>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <div class="w-24 h-2 rounded-full bg-white/10">
+                                            <div class="h-2 rounded-full bg-sky-500"
+                                                :style="`width:${items.length?((items.filter(i=>i.category===cat).length/items.length)*100)+'%':'0%'}`">
+                                            </div>
+                                        </div>
+                                        <span class="text-sky-400 font-bold text-sm w-6 text-right"
+                                            x-text="items.filter(i=>i.category===cat).length"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                <!-- Recent Activity -->
+                <div class="p-5 rounded-2xl glass">
+                    <h4 class="font-semibold text-white mb-4">🕐 Aktivitas Peminjaman Terbaru</h4>
+                    <div class="space-y-2">
+                        <template x-for="b in borrowings.slice(0,8)" :key="b.id">
+                            <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                <div>
+                                    <p class="text-white text-sm font-medium" x-text="b.archiveTitle"></p>
+                                    <p class="text-white/50 text-xs"
+                                        x-text="'Peminjam: '+b.borrower+' | '+b.borrowDate"></p>
+                                </div>
+                                <span
+                                    :class="{'bg-yellow-500/20 text-yellow-300':b.status==='Pending','bg-green-500/20 text-green-300':b.status==='Disetujui','bg-blue-500/20 text-blue-300':b.status==='Dikembalikan','bg-red-500/20 text-red-300':b.status==='Ditolak'}"
+                                    class="px-2 py-1 rounded text-xs shrink-0" x-text="b.status"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── PENGGUNA ── -->
+            <section x-show="view==='pengguna'" x-cloak class="mt-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-white">👥 Manajemen Pengguna</h3>
+                    <button x-show="hasPermission('userMgmt')" @click="openAddUserModal()"
+                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm"><i
+                            class="fa fa-plus mr-1"></i>Tambah Pengguna</button>
+                </div>
+                <div x-show="!hasPermission('userMgmt')"
+                    class="p-6 rounded-2xl glass border border-red-500/30 bg-red-900/10 text-center">
+                    <p class="text-red-300 text-sm"><i class="fa fa-lock mr-2"></i>Anda tidak memiliki izin mengakses
+                        fitur ini. Diperlukan role Admin Utama.</p>
+                </div>
+                <div x-show="hasPermission('userMgmt')" class="rounded-2xl overflow-x-auto glass">
+                    <table class="table-pengguna w-full text-sm">
+                        <thead class="bg-white/5 text-white/70">
+                            <tr>
+                                <th class="px-4 py-3 text-left">#</th>
+                                <th class="px-4 py-3 text-left">Nama</th>
+                                <th class="px-4 py-3 text-left">Email</th>
+                                <th class="px-4 py-3 text-left">Role</th>
+                                <th class="px-4 py-3 text-left">Status</th>
+                                <th class="px-4 py-3 text-left">Tgl Bergabung</th>
+                                <th class="px-4 py-3 text-left">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-white/90">
+                            <template x-if="users.length===0">
+                                <tr>
+                                    <td colspan="7" class="text-center py-8 text-white/50">Tidak ada pengguna</td>
+                                </tr>
+                            </template>
+                            <template x-for="(u,i) in users" :key="u.id">
+                                <tr class="border-t border-white/6 hover:bg-white/5 transition">
+                                    <td class="px-4 py-3 text-white/60" x-text="i+1"></td>
+                                    <td class="px-4 py-3 font-medium">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold"
+                                                x-text="u.name.charAt(0)"></div>
+                                            <span x-text="u.name"></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-white/70" x-text="u.email"></td>
+                                    <td class="px-4 py-3">
+                                        <span class="flex items-center gap-1">
+                                            <span x-text="roleEmojis[u.role]||'👤'"></span>
+                                            <span x-text="u.role"></span>
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <button @click="toggleUserStatus(u)"
+                                            :class="u.status==='Aktif'?'bg-green-500/20 text-green-300':'bg-gray-500/20 text-gray-400'"
+                                            class="px-2 py-1 rounded text-xs hover:opacity-80 transition"
+                                            x-text="u.status"></button>
+                                    </td>
+                                    <td class="px-4 py-3 text-white/60 text-xs" x-text="u.joinDate"></td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex gap-1">
+                                            <button @click="editUser(u)"
+                                                class="px-2 py-1 rounded bg-yellow-600 hover:bg-yellow-700 text-white text-xs"
+                                                title="Edit"><i class="fa fa-pencil"></i></button>
+                                            <button @click="deleteUser(u.id)"
+                                                class="px-2 py-1 rounded bg-red-700 hover:bg-red-800 text-white text-xs"
+                                                title="Hapus"><i class="fa fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── PROFIL ── -->
+            <section x-show="view==='profil'" x-cloak class="mt-2">
+                <h3 class="text-xl font-semibold text-white mb-6">👤 Profil Saya</h3>
+                <div class="grid md:grid-cols-3 gap-5">
+                    <!-- Profile Card -->
+                    <div class="p-6 rounded-2xl glass text-center">
+                        <div
+                            class="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-3xl mx-auto mb-3">
+                            <span x-text="roleEmojis[currentRole]"></span>
+                        </div>
+                        <h4 class="text-white font-semibold text-lg" x-text="profile.name||'Nama Pengguna'"></h4>
+                        <p class="text-indigo-400 text-sm" x-text="currentRole"></p>
+                        <p class="text-white/60 text-xs mt-1" x-text="profile.email||'-'"></p>
+                        <div class="mt-4 space-y-2 text-xs text-white/60">
+                            <div class="flex justify-between"><span>Status</span><span
+                                    class="text-green-400 font-medium" x-text="profile.status"></span></div>
+                            <div class="flex justify-between"><span>Bergabung</span><span
+                                    x-text="profile.joinDate"></span></div>
+                            <div class="flex justify-between"><span>Login Terakhir</span><span
+                                    x-text="profile.lastLogin"></span></div>
+                        </div>
+                        <button @click="profileEdit=true"
+                            class="mt-5 w-full px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm"><i
+                                class="fa fa-edit mr-2"></i>Edit Profil</button>
+                    </div>
+                    <!-- Account Actions -->
+                    <div class="md:col-span-2 space-y-4">
+                        <div class="p-5 rounded-2xl glass">
+                            <h4 class="font-semibold text-white mb-4"><i
+                                    class="fa fa-shield-halved mr-2 text-indigo-400"></i>Keamanan Akun</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <div>
+                                        <p class="text-white text-sm font-medium">Password</p>
+                                        <p class="text-white/50 text-xs">Ubah password akun Anda</p>
+                                    </div>
+                                    <button @click="passwordModal=true"
+                                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs"><i
+                                            class="fa fa-key mr-1"></i>Ubah</button>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <div>
+                                        <p class="text-white text-sm font-medium">Autentikasi 2 Faktor</p>
+                                        <p class="text-white/50 text-xs">Tingkatkan keamanan akun</p>
+                                    </div>
+                                    <button @click="twoFAModal=true"
+                                        class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs"><i
+                                            class="fa fa-mobile mr-1"></i>Aktifkan</button>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <div>
+                                        <p class="text-white text-sm font-medium">Sesi Aktif</p>
+                                        <p class="text-white/50 text-xs"
+                                            x-text="activeSessions.length+' sesi aktif saat ini'"></p>
+                                    </div>
+                                    <button @click="sessionsModal=true"
+                                        class="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs"><i
+                                            class="fa fa-clock mr-1"></i>Kelola</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 rounded-2xl glass">
+                            <h4 class="font-semibold text-white mb-4"><i
+                                    class="fa fa-info-circle mr-2 text-blue-400"></i>Informasi Role</h4>
+                            <div class="p-4 bg-indigo-900/30 rounded-xl border border-indigo-500/30">
+                                <div class="flex items-start gap-3">
+                                    <span class="text-3xl" x-text="roleEmojis[currentRole]"></span>
+                                    <div>
+                                        <p class="text-white font-semibold" x-text="currentRole"></p>
+                                        <p class="text-indigo-300 text-sm mt-1" x-text="currentRoleDescription"></p>
+                                        <div class="mt-2 flex flex-wrap gap-1">
+                                            <template x-for="p in permissions" :key="p">
+                                                <span
+                                                    class="px-2 py-0.5 bg-indigo-600/40 text-indigo-200 text-xs rounded-full"
+                                                    x-text="p"></span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── PENGATURAN ── -->
+            <section x-show="view==='pengaturan'" x-cloak class="mt-2">
+                <h3 class="text-xl font-semibold text-white mb-6">⚙️ Pengaturan Sistem</h3>
+                <div class="grid md:grid-cols-2 gap-5">
+                    <div class="p-5 rounded-2xl glass">
+                        <h4 class="font-semibold text-white mb-4"><i
+                                class="fa fa-palette mr-2 text-purple-400"></i>Tampilan</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white text-sm">Mode Gelap</p>
+                                    <p class="text-white/50 text-xs">Gunakan tema gelap</p>
+                                </div>
+                                <!-- Calls single toggleTheme() — no more duplicated inline logic -->
+                                <button @click="toggleTheme()"
+                                    :class="settings.darkMode ? 'bg-indigo-600' : 'bg-white/10'"
+                                    class="relative w-12 h-6 rounded-full transition-colors"
+                                    :title="settings.darkMode ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'">
+                                    <span :class="settings.darkMode ? 'translate-x-6' : 'translate-x-1'"
+                                        class="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform block"></span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white text-sm">Sidebar Otomatis</p>
+                                    <p class="text-white/50 text-xs">Tutup sidebar di layar kecil</p>
+                                </div>
+                                <button @click="settings.autoSidebar=!settings.autoSidebar"
+                                    :class="settings.autoSidebar?'bg-indigo-600':'bg-white/10'"
+                                    class="relative w-12 h-6 rounded-full transition-colors">
+                                    <span :class="settings.autoSidebar?'translate-x-6':'translate-x-1'"
+                                        class="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform block"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-5 rounded-2xl glass">
+                        <h4 class="font-semibold text-white mb-4"><i
+                                class="fa fa-bell mr-2 text-yellow-400"></i>Notifikasi</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white text-sm">Notifikasi Desktop</p>
+                                    <p class="text-white/50 text-xs">Pop-up di browser</p>
+                                </div>
+                                <button @click="settings.desktopNotif=!settings.desktopNotif"
+                                    :class="settings.desktopNotif?'bg-indigo-600':'bg-white/10'"
+                                    class="relative w-12 h-6 rounded-full transition-colors">
+                                    <span :class="settings.desktopNotif?'translate-x-6':'translate-x-1'"
+                                        class="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform block"></span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white text-sm">Notifikasi Email</p>
+                                    <p class="text-white/50 text-xs">Pemberitahuan via email</p>
+                                </div>
+                                <button @click="settings.emailNotif=!settings.emailNotif"
+                                    :class="settings.emailNotif?'bg-indigo-600':'bg-white/10'"
+                                    class="relative w-12 h-6 rounded-full transition-colors">
+                                    <span :class="settings.emailNotif?'translate-x-6':'translate-x-1'"
+                                        class="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform block"></span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white text-sm">Arsip Baru</p>
+                                    <p class="text-white/50 text-xs">Notifikasi saat ada arsip baru</p>
+                                </div>
+                                <button @click="settings.newArchiveAlert=!settings.newArchiveAlert"
+                                    :class="settings.newArchiveAlert?'bg-indigo-600':'bg-white/10'"
+                                    class="relative w-12 h-6 rounded-full transition-colors">
+                                    <span :class="settings.newArchiveAlert?'translate-x-6':'translate-x-1'"
+                                        class="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform block"></span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white text-sm">Laporan Mingguan</p>
+                                    <p class="text-white/50 text-xs">Ringkasan setiap Senin</p>
+                                </div>
+                                <button @click="settings.weeklyReport=!settings.weeklyReport"
+                                    :class="settings.weeklyReport?'bg-indigo-600':'bg-white/10'"
+                                    class="relative w-12 h-6 rounded-full transition-colors">
+                                    <span :class="settings.weeklyReport?'translate-x-6':'translate-x-1'"
+                                        class="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform block"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-5 rounded-2xl glass">
+                        <h4 class="font-semibold text-white mb-4"><i
+                                class="fa fa-calendar mr-2 text-green-400"></i>Export Terjadwal</h4>
+                        <p class="text-white/60 text-sm mb-4">Jadwalkan laporan otomatis ke email Anda.</p>
+                        <div x-show="scheduledExports.length===0" class="text-white/40 text-sm text-center py-4">Belum
+                            ada jadwal export aktif</div>
+                        <div x-show="scheduledExports.length>0" class="space-y-2 mb-4">
+                            <template x-for="s in scheduledExports" :key="s.id">
+                                <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg text-sm">
+                                    <div>
+                                        <span class="text-white capitalize" x-text="s.frequency"></span>
+                                        <span class="text-white/60 ml-2" x-text="'@ '+s.time"></span>
+                                        <span class="text-indigo-400 text-xs ml-2" x-text="'→ '+s.email"></span>
+                                    </div>
+                                    <button @click="cancelScheduledExport(s.id)"
+                                        class="text-red-400 hover:text-red-300 text-xs"><i
+                                            class="fa fa-trash"></i></button>
+                                </div>
+                            </template>
+                        </div>
+                        <button @click="toggleScheduleModal()"
+                            class="w-full px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm"><i
+                                class="fa fa-plus mr-1"></i>Tambah Jadwal</button>
+                    </div>
+                    <div class="p-5 rounded-2xl glass">
+                        <h4 class="font-semibold text-white mb-4"><i class="fa fa-database mr-2 text-red-400"></i>Data &
+                            Privasi</h4>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-white/5 rounded-lg">
+                                <p class="text-white text-sm font-medium">Cache Browser</p>
+                                <p class="text-white/50 text-xs mb-2">Bersihkan data tersimpan lokal</p>
+                                <button
+                                    @click="Swal.fire({icon:'success',title:'Cache Dibersihkan',timer:1500,showConfirmButton:false})"
+                                    class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs"><i
+                                        class="fa fa-broom mr-1"></i>Bersihkan</button>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-lg">
+                                <p class="text-white text-sm font-medium">Versi Aplikasi</p>
+                                <p class="text-indigo-400 text-sm font-mono mt-1">SIPARS v2.0.0</p>
+                                <p class="text-white/40 text-xs">Dinas Kominfo Kabupaten Deiyai</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════ -->
+
+    <!-- Modal Add/Edit Arsip -->
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-md relative">
+            <button @click="closeModal()" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5" x-text="editing?'✏️ Edit Arsip':'➕ Tambah Arsip'"></h3>
+            <div class="space-y-3">
+                <div><label class="text-xs text-white/70 block mb-1">Judul Arsip *</label><input x-model="form.title"
+                        type="text" placeholder="Masukkan judul arsip"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div><label class="text-xs text-white/70 block mb-1">Kode Arsip *</label><input x-model="form.code"
+                        type="text" placeholder="Contoh: DOC-0001"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm font-mono" />
+                </div>
+                <div><label class="text-xs text-white/70 block mb-1">Kategori</label>
+                    <select x-model="form.category"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                        <template x-for="cat in categories">
+                            <option :value="cat" class="text-black bg-white" x-text="cat"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-xs text-white/70 block mb-1">Tahun</label><input x-model="form.year"
+                            type="number" placeholder="2025"
+                            class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" />
+                    </div>
+                    <div><label class="text-xs text-white/70 block mb-1">Status</label>
+                        <select x-model="form.status"
+                            class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                            <template x-for="s in statuses">
+                                <option :value="s" class="text-black bg-white" x-text="s"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+                <div><label class="text-xs text-white/70 block mb-1">File (Opsional)</label><input type="file"
+                        @change="onFile($event)"
+                        class="w-full text-white/70 text-sm file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-indigo-600 file:text-white file:text-xs hover:file:bg-indigo-700" />
+                </div>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button @click="closeModal()" :disabled="loading"
+                        class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm disabled:opacity-50">Batal</button>
+                    <button @click="save()" :disabled="loading"
+                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm disabled:opacity-50 flex items-center gap-2">
+                        <i x-show="loading" class="fa fa-spinner spinner"></i>
+                        <span x-text="loading?'Menyimpan...':'Simpan'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Preview -->
+    <div x-show="previewOpen" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-md relative">
+            <button @click="previewOpen=false" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-4">👁️ Detail Arsip</h3>
+            <div class="space-y-3">
+                <div class="p-4 bg-white/5 rounded-xl">
+                    <p class="text-xs text-white/50 mb-1">Judul</p>
+                    <p class="text-white font-semibold" x-text="previewItem.title"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 bg-white/5 rounded-xl">
+                        <p class="text-xs text-white/50 mb-1">Kode</p>
+                        <p class="text-indigo-400 font-mono text-sm" x-text="previewItem.code"></p>
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-xl">
+                        <p class="text-xs text-white/50 mb-1">Tahun</p>
+                        <p class="text-white text-sm" x-text="previewItem.year"></p>
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-xl">
+                        <p class="text-xs text-white/50 mb-1">Kategori</p>
+                        <p class="text-white text-sm" x-text="previewItem.category"></p>
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-xl">
+                        <p class="text-xs text-white/50 mb-1">Status</p>
+                        <p :class="{'text-emerald-400':previewItem.status==='Disetujui','text-amber-400':previewItem.status==='Menunggu Verifikasi','text-slate-400':previewItem.status==='Draft','text-red-400':previewItem.status==='Ditolak'}"
+                            class="text-sm font-medium" x-text="previewItem.status"></p>
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-xl">
+                        <p class="text-xs text-white/50 mb-1">Downloads</p>
+                        <p class="text-white text-sm" x-text="previewItem.downloads||0"></p>
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-xl">
+                        <p class="text-xs text-white/50 mb-1">Ukuran</p>
+                        <p class="text-white text-sm"
+                            x-text="previewItem.size?(Math.round(previewItem.size/1024*10)/10)+' MB':'—'"></p>
+                    </div>
+                </div>
+            </div>
+            <button @click="download(previewItem)"
+                class="w-full mt-4 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm"><i
+                    class="fa fa-download mr-2"></i>Download File</button>
+        </div>
+    </div>
+
+    <!-- Modal Peminjaman -->
+    <div x-show="showBorrowModal" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-lg relative">
+            <button @click="closeBorrowModal()" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"><i class="fa fa-handshake mr-2 text-purple-400"></i><span
+                    x-text="borrowForm.id?'Edit Peminjaman':'Pinjam Dokumen'"></span></h3>
+            <div class="space-y-4">
+                <div><label class="text-sm text-white/80 block mb-1">Pilih Dokumen *</label>
+                    <select x-model="borrowForm.archiveId"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                        <option value="">-- Pilih Dokumen --</option>
+                        <template x-for="item in items.filter(i=>i.status==='Disetujui')" :key="item.id">
+                            <option :value="item.id" class="text-black bg-white" x-text="item.code+' - '+item.title">
+                            </option>
+                        </template>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-sm text-white/80 block mb-1">Tgl Peminjaman *</label><input
+                            x-model="borrowForm.borrowDate" type="date"
+                            class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" />
+                    </div>
+                    <div><label class="text-sm text-white/80 block mb-1">Tgl Pengembalian *</label><input
+                            x-model="borrowForm.returnDate" type="date"
+                            class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" />
+                    </div>
+                </div>
+                <div><label class="text-sm text-white/80 block mb-1">Catatan (Opsional)</label><textarea
+                        x-model="borrowForm.notes" placeholder="Alasan peminjaman..."
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 h-20 text-sm resize-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 mt-2">
+                    <button @click="closeBorrowModal()"
+                        class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm">Batal</button>
+                    <button @click="saveBorrowing()" :disabled="loading"
+                        class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm disabled:opacity-50 flex items-center gap-2">
+                        <i x-show="loading" class="fa fa-spinner spinner"></i>
+                        <i x-show="!loading" class="fa fa-save"></i>
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal User -->
+    <div x-show="showUserModal" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-md relative">
+            <button @click="showUserModal=false" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"
+                x-text="editingUser?'✏️ Edit Pengguna':'➕ Tambah Pengguna'"></h3>
+            <div class="space-y-3">
+                <div><label class="text-xs text-white/70 block mb-1">Nama Lengkap *</label><input
+                        x-model="userForm.name" type="text" placeholder="Nama lengkap"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div><label class="text-xs text-white/70 block mb-1">Email *</label><input x-model="userForm.email"
+                        type="email" placeholder="email@kominfo.go.id"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div><label class="text-xs text-white/70 block mb-1">Role</label>
+                    <select x-model="userForm.role"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                        <template x-for="r in roles">
+                            <option :value="r" class="text-black bg-white" x-text="r"></option>
+                        </template>
+                    </select>
+                </div>
+                <div><label class="text-xs text-white/70 block mb-1">Status</label>
+                    <select x-model="userForm.status"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                        <option value="Aktif" class="text-black bg-white">Aktif</option>
+                        <option value="Nonaktif" class="text-black bg-white">Nonaktif</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button @click="showUserModal=false"
+                        class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm">Batal</button>
+                    <button @click="saveUser()"
+                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm"><i
+                            class="fa fa-save mr-1"></i>Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Profile -->
+    <div x-show="profileEdit" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-lg relative">
+            <button @click="closeEditProfile()" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"><i class="fa fa-user-edit mr-2 text-indigo-400"></i>Edit
+                Profil</h3>
+            <div class="space-y-4">
+                <div><label class="text-sm text-white/80 block mb-1">Nama Lengkap</label><input x-model="profile.name"
+                        type="text" placeholder="Nama lengkap"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div><label class="text-sm text-white/80 block mb-1">Email</label><input x-model="profile.email"
+                        type="email" placeholder="email@domain.go.id"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div><label class="text-sm text-white/80 block mb-1">No. Telepon</label><input x-model="profile.phone"
+                        type="tel" placeholder="+62 xxx-xxx-xxxx"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button @click="closeEditProfile()"
+                        class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm">Batal</button>
+                    <button @click="saveProfile()" :disabled="loading"
+                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm disabled:opacity-50 flex items-center gap-2">
+                        <i x-show="loading" class="fa fa-spinner spinner"></i>
+                        <i x-show="!loading" class="fa fa-save"></i>
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ubah Password -->
+    <div x-show="passwordModal" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-md relative">
+            <button @click="passwordModal=false" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"><i class="fa fa-lock mr-2 text-yellow-400"></i>Ubah
+                Password</h3>
+            <div class="space-y-4">
+                <div><label class="text-sm text-white/80 block mb-1">Password Lama</label><input
+                        x-model="passwordForm.current" type="password" placeholder="••••••••"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div><label class="text-sm text-white/80 block mb-1">Password Baru</label><input
+                        x-model="passwordForm.new" type="password" placeholder="Min. 8 karakter, huruf+angka"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div><label class="text-sm text-white/80 block mb-1">Konfirmasi Password Baru</label><input
+                        x-model="passwordForm.confirm" type="password" placeholder="Ulangi password baru"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button @click="passwordModal=false"
+                        class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm">Batal</button>
+                    <button @click="changePassword()" :disabled="loading"
+                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm disabled:opacity-50 flex items-center gap-2">
+                        <i x-show="loading" class="fa fa-spinner spinner"></i>
+                        <i x-show="!loading" class="fa fa-check"></i>
+                        Ubah Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2FA -->
+    <div x-show="twoFAModal" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-md relative">
+            <button @click="twoFAModal=false" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"><i
+                    class="fa fa-mobile mr-2 text-green-400"></i>Autentikasi 2 Faktor</h3>
+            <div class="space-y-4 text-white/80 text-sm">
+                <p>2FA menambah lapisan keamanan. Anda memerlukan kode dari aplikasi autentikator saat login.</p>
+                <div class="p-4 bg-blue-600/20 border border-blue-500/40 rounded-xl">
+                    <p class="font-semibold text-white mb-2">Aplikasi yang didukung:</p>
+                    <ul class="space-y-1 text-xs">
+                        <li>• Google Authenticator</li>
+                        <li>• Microsoft Authenticator</li>
+                        <li>• Authy</li>
+                    </ul>
+                </div>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button @click="twoFAModal=false"
+                        class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm">Batal</button>
+                    <button @click="enableTwoFA()"
+                        class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm"><i
+                            class="fa fa-check mr-1"></i>Aktifkan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sesi Aktif -->
+    <div x-show="sessionsModal" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div
+            class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-lg relative max-h-[80vh] overflow-y-auto">
+            <button @click="sessionsModal=false" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"><i class="fa fa-clock mr-2 text-orange-400"></i>Sesi Aktif
+            </h3>
+            <div class="space-y-3">
+                <template x-for="s in activeSessions" :key="s.id">
+                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl flex items-start justify-between">
+                        <div>
+                            <p class="text-white font-semibold text-sm" x-text="s.device"></p>
+                            <p class="text-white/50 text-xs mt-1" x-text="s.location"></p>
+                            <p class="text-white/50 text-xs" x-text="s.time"></p>
+                            <span x-show="s.current"
+                                class="inline-block mt-1.5 px-2 py-0.5 bg-green-600/40 text-green-300 text-xs rounded-full">Sesi
+                                Saat Ini</span>
+                        </div>
+                        <button x-show="!s.current" @click="terminateSession(s.id)"
+                            class="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs mt-1"><i
+                                class="fa fa-sign-out mr-1"></i>Akhiri</button>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Widget Manager -->
+    <div x-show="showWidgetManager" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-md relative">
+            <button @click="toggleWidgetManager()" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"><i class="fa fa-sliders mr-2 text-purple-400"></i>Atur
+                Widget Dashboard</h3>
+            <div class="space-y-2 mb-4">
+                <template x-for="w in widgets" :key="w.id">
+                    <div class="widget-item p-3 bg-white/5 hover:bg-white/8 rounded-xl border border-white/10 flex items-center justify-between transition"
+                        @dragstart="startDragWidget(w)" @dragover.prevent="$el.classList.add('drag-over')"
+                        @dragleave="$el.classList.remove('drag-over')"
+                        @drop="dropWidget(w);$el.classList.remove('drag-over')" draggable="true">
+                        <div class="flex items-center gap-3">
+                            <i class="fa fa-grip-vertical text-white/30"></i>
+                            <span class="text-white text-sm" x-text="w.label"></span>
+                        </div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" :checked="w.visible" @change="toggleWidgetVisibility(w.id)"
+                                class="w-4 h-4 cursor-pointer accent-indigo-500" />
+                            <span class="text-xs text-white/60" x-text="w.visible?'Tampil':'Sembunyikan'"></span>
+                        </label>
+                    </div>
+                </template>
+            </div>
+            <p class="text-xs text-white/50 p-2 bg-blue-600/15 rounded-lg border border-blue-500/20 mb-4"><i
+                    class="fa fa-info-circle mr-1"></i>Seret widget untuk mengubah urutan. Perubahan tersimpan otomatis.
+            </p>
+            <div class="flex gap-2">
+                <button @click="resetWidgetPreferences()"
+                    class="flex-1 px-3 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm"><i
+                        class="fa fa-undo mr-1"></i>Reset</button>
+                <button @click="toggleWidgetManager()"
+                    class="flex-1 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm"><i
+                        class="fa fa-check mr-1"></i>Selesai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Export -->
+    <div x-show="showExportModal" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-md relative">
+            <button @click="toggleExportModal()" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"><i class="fa fa-download mr-2 text-green-400"></i>Export
+                Data Arsip</h3>
+            <div class="mb-4">
+                <label class="text-xs text-white/70 uppercase tracking-wide block mb-2">Pilih Kolom</label>
+                <div class="space-y-1.5 max-h-40 overflow-y-auto">
+                    <template x-for="f in exportFields" :key="f.name">
+                        <label class="flex items-center gap-2 p-2 hover:bg-white/5 rounded cursor-pointer transition">
+                            <input type="checkbox" :checked="f.selected" @change="toggleExportField(f.name)"
+                                class="w-4 h-4 cursor-pointer accent-indigo-500" />
+                            <span class="text-white text-sm" x-text="f.label"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="text-xs text-white/70 uppercase tracking-wide block mb-2">Format Export</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="exportFormat='csv'"
+                        :class="exportFormat==='csv'?'bg-indigo-600 border-indigo-500':'bg-white/5 border-white/10 hover:bg-white/10'"
+                        class="px-3 py-2 rounded-lg text-white text-sm transition border"><i
+                            class="fa fa-file-csv mr-1"></i>CSV</button>
+                    <button @click="exportFormat='pdf'"
+                        :class="exportFormat==='pdf'?'bg-indigo-600 border-indigo-500':'bg-white/5 border-white/10 hover:bg-white/10'"
+                        class="px-3 py-2 rounded-lg text-white text-sm transition border"><i
+                            class="fa fa-file-pdf mr-1"></i>PDF / Print</button>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button @click="exportFormat==='csv'?exportToCSV():exportToPDF()"
+                    class="flex-1 px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm"><i
+                        class="fa fa-download mr-1"></i><span
+                        x-text="'Export '+exportFormat.toUpperCase()"></span></button>
+                <button @click="toggleScheduleModal()"
+                    class="flex-1 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm"><i
+                        class="fa fa-clock mr-1"></i>Jadwalkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Schedule Export -->
+    <div x-show="showScheduleModal" x-cloak class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 glass border border-white/10 p-6 rounded-2xl w-full max-w-md relative">
+            <button @click="toggleScheduleModal()" class="absolute top-3 right-3 text-white/60 hover:text-white"><i
+                    class="fa fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-semibold text-white mb-5"><i class="fa fa-calendar mr-2 text-purple-400"></i>Jadwal
+                Export Otomatis</h3>
+            <div class="space-y-4">
+                <div><label class="text-xs text-white/70 block mb-1">Frekuensi</label>
+                    <select x-model="scheduleForm.frequency"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm">
+                        <option value="daily" class="text-black bg-white">Harian</option>
+                        <option value="weekly" class="text-black bg-white">Mingguan</option>
+                        <option value="monthly" class="text-black bg-white">Bulanan</option>
+                    </select>
+                </div>
+                <div><label class="text-xs text-white/70 block mb-1">Jam Pengiriman</label><input type="time"
+                        x-model="scheduleForm.time"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div><label class="text-xs text-white/70 block mb-1">Email Tujuan *</label><input type="email"
+                        x-model="scheduleForm.email" placeholder="contoh@email.com"
+                        class="w-full p-2.5 rounded-lg bg-white/5 text-white border border-white/10 text-sm" /></div>
+                <div x-show="scheduledExports.length>0"
+                    class="p-3 bg-white/5 rounded-xl border border-white/10 max-h-32 overflow-y-auto">
+                    <p class="text-xs text-white/60 mb-2">Jadwal Aktif:</p>
+                    <template x-for="s in scheduledExports" :key="s.id">
+                        <div class="flex justify-between items-center py-1 text-xs">
+                            <span class="text-white capitalize" x-text="s.frequency+' @ '+s.time+' → '+s.email"></span>
+                            <button @click="cancelScheduledExport(s.id)" class="text-red-400 hover:text-red-300 ml-2"><i
+                                    class="fa fa-trash"></i></button>
+                        </div>
+                    </template>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button @click="toggleScheduleModal()"
+                        class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm">Batal</button>
+                    <button @click="scheduleExport()"
+                        class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm"><i
+                            class="fa fa-save mr-1"></i>Simpan Jadwal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Loading Overlay -->
+    <div x-show="loading" x-transition class="loading-overlay" style="display:none;">
+        <div class="bg-white/10 backdrop-blur-md p-8 rounded-2xl glass text-center">
+            <i class="fa fa-spinner spinner text-4xl text-indigo-400 mb-4 block"></i>
+            <p class="text-white font-semibold" x-text="loadingMessage"></p>
+            <div x-show="isUploading" class="mt-4 w-48">
+                <div class="w-full bg-white/10 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-indigo-500 to-sky-500 h-2 rounded-full transition-all"
+                        :style="`width:${uploadProgress}%`"></div>
+                </div>
+                <p class="text-xs text-white/70 mt-2" x-text="`${Math.round(uploadProgress)}%`"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="arsip.js"></script>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            console.log('✅ Alpine initialized');
+        });
+        setTimeout(() => {
+            const el = document.querySelector('[x-cloak]');
+            if (el) { el.removeAttribute('x-cloak'); console.warn('⚠ Force removed x-cloak'); }
+        }, 3000);
+    </script>
+</body>
+
+</html>
