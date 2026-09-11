@@ -217,7 +217,7 @@ window.app = function () {
             }
             console.log('🎬 init() starting...');
 
-            // Load role dari localStorage (set oleh login.html)
+            // Load role dari localStorage (set oleh index.html)
             const savedRole = localStorage.getItem('userRole');
             if (savedRole && this.roles.includes(savedRole)) {
                 this.currentRole = savedRole;
@@ -648,7 +648,7 @@ window.app = function () {
             const savedDark = localStorage.getItem('setting_darkMode');
             if (savedDark !== null) {
                 // Handle both JSON.stringify booleans AND raw string booleans
-                // login.html stores: JSON.stringify(bool) → "true"/"false"
+                // index.html stores: JSON.stringify(bool) → "true"/"false"
                 // Older admin saves may have stored raw: true/false
                 let isDark;
                 try {
@@ -672,7 +672,7 @@ window.app = function () {
 
         /**
          * Toggle dark/light mode — single source of truth for admin.html
-         * Saves with JSON.stringify so login.html can read it correctly too
+         * Saves with JSON.stringify so index.html can read it correctly too
          */
         toggleTheme() {
             this.settings.darkMode = !this.settings.darkMode;
@@ -1256,7 +1256,7 @@ window.app = function () {
                     if (result.isConfirmed) {
                         localStorage.removeItem('userRole');
                         localStorage.removeItem('userProfile');
-                        Swal.fire({ icon: 'success', title: 'Logout Berhasil', text: 'Anda telah logout dari SIPARS.', confirmButtonColor: '#3b82f6', willClose: () => { window.location.href = 'login.html'; } });
+                        Swal.fire({ icon: 'success', title: 'Logout Berhasil', text: 'Anda telah logout dari SIPARS.', confirmButtonColor: '#3b82f6', willClose: () => { window.location.href = 'index.html'; } });
                     }
                 });
         },

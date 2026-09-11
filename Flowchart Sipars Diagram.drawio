@@ -1,0 +1,387 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="QRoY3nKxll-6l0IF_jOB">
+    <mxGraphModel dx="964" dy="919" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lane1" parent="1" style="swimlane;html=1;startSize=40;fillColor=none;strokeColor=none;fontStyle=1;align=left;" value="[1] AUTENTIKASI — index.html" vertex="1">
+          <mxGeometry height="500" width="750" x="50" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n_start" parent="lane1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;fontStyle=1" value="MULAI" vertex="1">
+          <mxGeometry height="40" width="80" x="335" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n_login_page" parent="lane1" style="rounded=1;whiteSpace=wrap;html=1;" value="Buka index.html &amp; Pilih Role&#xa;(Admin Utama / Operator / User Unit / Viewer)" vertex="1">
+          <mxGeometry height="50" width="260" x="245" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="n_input_cred" parent="lane1" style="rounded=0;whiteSpace=wrap;html=1;" value="Input Email &amp; Password" vertex="1">
+          <mxGeometry height="40" width="150" x="300" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="n_check_cred" parent="lane1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Kredensial&#xa;Valid?" vertex="1">
+          <mxGeometry height="80" width="100" x="325" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="n_err_login" parent="lane1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Tampilkan Error&#xa;(Shake Animation)" vertex="1">
+          <mxGeometry height="40" width="130" x="120" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="n_save_session" parent="lane1" style="rounded=0;whiteSpace=wrap;html=1;" value="Simpan userRole &amp; userProfile&#xa;ke localStorage" vertex="1">
+          <mxGeometry height="40" width="180" x="285" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="n_redirect_admin" parent="lane1" style="rounded=1;whiteSpace=wrap;html=1;" value="Redirect ke admin.html" vertex="1">
+          <mxGeometry height="40" width="150" x="300" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="lane1" source="n_start" style="noEdgeStyle=1;orthogonal=1;" target="n_login_page">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="lane1" source="n_login_page" style="noEdgeStyle=1;orthogonal=1;" target="n_input_cred">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="lane1" source="n_input_cred" style="noEdgeStyle=1;orthogonal=1;" target="n_check_cred">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="lane1" source="n_check_cred" style="noEdgeStyle=1;orthogonal=1;" target="n_save_session">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Ya" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="lane1" source="n_check_cred" style="noEdgeStyle=1;orthogonal=1;" target="n_err_login">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Tidak" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="lane1" source="n_err_login" style="noEdgeStyle=1;orthogonal=1;" target="n_input_cred">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="lane1" source="n_save_session" style="noEdgeStyle=1;orthogonal=1;" target="n_redirect_admin">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane2" parent="1" style="swimlane;html=1;startSize=40;fillColor=none;strokeColor=none;fontStyle=1;align=left;" value="[2] INISIALISASI — admin.html + arsip.js" vertex="1">
+          <mxGeometry height="320" width="750" x="50" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="n_load_session" parent="lane2" style="rounded=0;whiteSpace=wrap;html=1;" value="Load userRole &amp; userProfile dari localStorage" vertex="1">
+          <mxGeometry height="40" width="250" x="250" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n_apply_role" parent="lane2" style="rounded=0;whiteSpace=wrap;html=1;" value="applyRole() &amp; _buildItems()&#xa;(Set permissions &amp; load 60 sample items async)" vertex="1">
+          <mxGeometry height="40" width="270" x="240" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="n_load_support" parent="lane2" style="rounded=0;whiteSpace=wrap;html=1;" value="Load Data Pendukung (Settings, Users, Borrowings, Notif)" vertex="1">
+          <mxGeometry height="40" width="300" x="225" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="n_init_chart" parent="lane2" style="rounded=1;whiteSpace=wrap;html=1;" value="initCharts() — Render Chart.js Dashboard" vertex="1">
+          <mxGeometry height="40" width="240" x="255" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="lane2" source="n_load_session" target="n_apply_role">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="lane2" source="n_apply_role" target="n_load_support">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="lane2" source="n_load_support" target="n_init_chart">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="n_redirect_admin" target="n_load_session">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane3" parent="1" style="swimlane;html=1;startSize=40;fillColor=none;strokeColor=none;fontStyle=1;align=left;" value="[3] NAVIGASI — Sidebar / Breadcrumb (onViewChange)" vertex="1">
+          <mxGeometry height="270" width="750" x="50" y="910" as="geometry" />
+        </mxCell>
+        <mxCell id="n_click_menu" parent="lane3" style="rounded=0;whiteSpace=wrap;html=1;" value="User Klik Menu Sidebar / Breadcrumb" vertex="1">
+          <mxGeometry height="40" width="220" x="265" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n_view_change" parent="lane3" style="rounded=0;whiteSpace=wrap;html=1;" value="onViewChange(newView) &amp; updateBreadcrumb()&#xa;(Destroy chart jika meninggalkan dashboard)" vertex="1">
+          <mxGeometry height="40" width="270" x="240" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="n_check_dash" parent="lane3" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="view ==&#xa;&#39;dashboard&#39;?" vertex="1">
+          <mxGeometry height="80" width="100" x="325" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="n_reinit_chart" parent="lane3" style="rounded=0;whiteSpace=wrap;html=1;" value="$nextTick (200ms) → initCharts()" vertex="1">
+          <mxGeometry height="40" width="190" x="510" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="lane3" source="n_click_menu" target="n_view_change">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="lane3" source="n_view_change" target="n_check_dash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="lane3" source="n_check_dash" target="n_reinit_chart">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Ya" as="edgeLabel" />
+            <mxPoint x="-10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="n_init_chart" target="n_click_menu">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane4" parent="1" style="swimlane;html=1;startSize=40;fillColor=none;strokeColor=none;fontStyle=1;align=left;" value="[4] MANAJEMEN ARSIP — view = &#39;arsip&#39;" vertex="1">
+          <mxGeometry height="400" width="750" x="50" y="1200" as="geometry" />
+        </mxCell>
+        <mxCell id="n_has_perm" parent="lane4" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="hasPermission&#xa;(action)?" vertex="1">
+          <mxGeometry height="80" width="110" x="320" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n_perm_denied" parent="lane4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Akses Ditolak&#xa;(SweetAlert Error)" vertex="1">
+          <mxGeometry height="40" width="130" x="120" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n_action_fork" parent="lane4" style="rhombus;whiteSpace=wrap;html=1;" value="Pilih Aksi" vertex="1">
+          <mxGeometry height="60" width="80" x="335" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="n_crud_c" parent="lane4" style="rounded=0;whiteSpace=wrap;html=1;" value="TAMBAH&#xa;(openAddModal)" vertex="1">
+          <mxGeometry height="40" width="120" x="180" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="n_crud_u" parent="lane4" style="rounded=0;whiteSpace=wrap;html=1;" value="EDIT&#xa;(edit(item))" vertex="1">
+          <mxGeometry height="40" width="120" x="315" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="n_crud_d" parent="lane4" style="rounded=0;whiteSpace=wrap;html=1;" value="HAPUS&#xa;(delete(id))" vertex="1">
+          <mxGeometry height="40" width="120" x="450" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="n_save_arsip" parent="lane4" style="rounded=1;whiteSpace=wrap;html=1;" value="Validasi &amp; save() — Update items[], _updateStats() &amp; SweetAlert Sukses" vertex="1">
+          <mxGeometry height="50" width="390" x="180" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="lane4" source="n_has_perm" target="n_perm_denied">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Tidak" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="lane4" source="n_has_perm" target="n_action_fork">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Ya" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="lane4" source="n_action_fork" target="n_crud_c">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="lane4" source="n_action_fork" target="n_crud_u">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="lane4" source="n_action_fork" target="n_crud_d">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="lane4" source="n_crud_c" target="n_save_arsip">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" edge="1" parent="lane4" source="n_crud_u" target="n_save_arsip">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" edge="1" parent="lane4" source="n_crud_d" target="n_save_arsip">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="n_check_dash" target="n_has_perm">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Tidak" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="n_reinit_chart" target="n_has_perm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane5" parent="1" style="swimlane;html=1;startSize=40;fillColor=none;strokeColor=none;fontStyle=1;align=left;" value="[5] PEMINJAMAN — view = &#39;peminjaman&#39;" vertex="1">
+          <mxGeometry height="400" width="750" x="50" y="1620" as="geometry" />
+        </mxCell>
+        <mxCell id="n_req_borrow" parent="lane5" style="rounded=0;whiteSpace=wrap;html=1;" value="User Request Pinjam: addBorrowing(item) &amp; Isi Form" vertex="1">
+          <mxGeometry height="40" width="280" x="235" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n_check_date" parent="lane5" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="returnDate &gt;&#xa;borrowDate?" vertex="1">
+          <mxGeometry height="80" width="120" x="315" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="n_err_date" parent="lane5" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Error: Tanggal&#xa;Tidak Valid" vertex="1">
+          <mxGeometry height="40" width="120" x="120" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="n_save_borrow" parent="lane5" style="rounded=0;whiteSpace=wrap;html=1;" value="saveBorrowing() → Status: Pending (localStorage)" vertex="1">
+          <mxGeometry height="40" width="270" x="240" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="n_admin_verify" parent="lane5" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Admin / Operator Verifikasi&#xa;(Approve / Reject?)" vertex="1">
+          <mxGeometry height="80" width="180" x="285" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="n_status_approved" parent="lane5" style="rounded=0;whiteSpace=wrap;html=1;" value="Status: Disetujui&#xa;&amp; addNotification()" vertex="1">
+          <mxGeometry height="40" width="150" x="170" y="345" as="geometry" />
+        </mxCell>
+        <mxCell id="n_status_rejected" parent="lane5" style="rounded=0;whiteSpace=wrap;html=1;" value="Status: Ditolak&#xa;(Sertakan Alasan)" vertex="1">
+          <mxGeometry height="40" width="150" x="430" y="345" as="geometry" />
+        </mxCell>
+        <mxCell id="e27" edge="1" parent="lane5" source="n_req_borrow" target="n_check_date">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e28" edge="1" parent="lane5" source="n_check_date" target="n_err_date">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Tidak" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e29" edge="1" parent="lane5" source="n_err_date" target="n_req_borrow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e30" edge="1" parent="lane5" source="n_check_date" target="n_save_borrow">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Ya" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e31" edge="1" parent="lane5" source="n_save_borrow" target="n_admin_verify">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e32" edge="1" parent="lane5" source="n_admin_verify" target="n_status_approved">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Approve" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e33" edge="1" parent="lane5" source="n_admin_verify" target="n_status_rejected">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="Reject" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e26" edge="1" parent="1" source="n_save_arsip" target="n_req_borrow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane6" parent="1" style="swimlane;html=1;startSize=40;fillColor=none;strokeColor=none;fontStyle=1;align=left;" value="[6] LAPORAN &amp;amp; EXPORT — view = &#39;laporan&#39;" vertex="1">
+          <mxGeometry height="380" width="750" x="50" y="2040" as="geometry" />
+        </mxCell>
+        <mxCell id="n_open_export" parent="lane6" style="rounded=0;whiteSpace=wrap;html=1;" value="Buka Export Modal: toggleExportModal()" vertex="1">
+          <mxGeometry height="40" width="240" x="255" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n_check_format" parent="lane6" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Pilih Format&#xa;Export" vertex="1">
+          <mxGeometry height="80" width="100" x="325" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="n_export_csv" parent="lane6" style="rounded=0;whiteSpace=wrap;html=1;" value="exportToCSV()&#xa;(BOM UTF-8 + Blob)" vertex="1">
+          <mxGeometry height="40" width="140" x="180" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="n_export_pdf" parent="lane6" style="rounded=0;whiteSpace=wrap;html=1;" value="exportToPDF()&#xa;(window.print())" vertex="1">
+          <mxGeometry height="40" width="140" x="430" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="n_schedule_export" parent="lane6" style="rounded=1;whiteSpace=wrap;html=1;" value="scheduleExport() — Simpan ke localStorage &amp; SweetAlert Sukses" vertex="1">
+          <mxGeometry height="40" width="360" x="195" y="275" as="geometry" />
+        </mxCell>
+        <mxCell id="n_export_stats" parent="lane6" style="rounded=0;whiteSpace=wrap;html=1;" value="exportStatsToCSV() — Ringkasan Distribusi Kategori" vertex="1">
+          <mxGeometry height="40" width="310" x="220" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="e36" edge="1" parent="lane6" source="n_open_export" target="n_check_format">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e37" edge="1" parent="lane6" source="n_check_format" target="n_export_csv">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="CSV" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e38" edge="1" parent="lane6" source="n_check_format" target="n_export_pdf">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint value="PDF" as="edgeLabel" />
+            <mxPoint x="10" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e39" edge="1" parent="lane6" source="n_export_csv" target="n_schedule_export">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e40" edge="1" parent="lane6" source="n_export_pdf" target="n_schedule_export">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e41" edge="1" parent="lane6" source="n_schedule_export" target="n_export_stats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e34" edge="1" parent="1" source="n_status_approved" target="n_open_export">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e35" edge="1" parent="1" source="n_status_rejected" target="n_open_export">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane7" parent="1" style="swimlane;html=1;startSize=40;fillColor=none;strokeColor=none;fontStyle=1;align=left;" value="[7] PENGATURAN &amp;amp; PROFIL — view = &#39;pengaturan&#39; / &#39;profil&#39;" vertex="1">
+          <mxGeometry height="260" width="750" x="50" y="2440" as="geometry">
+            <mxRectangle height="40" width="360" x="50" y="2440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n_config_fork" parent="lane7" style="rhombus;whiteSpace=wrap;html=1;" value="Pilih Fitur Pengaturan" vertex="1">
+          <mxGeometry height="60" width="160" x="295" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n_cfg_theme" parent="lane7" style="rounded=0;whiteSpace=wrap;html=1;" value="toggleTheme()&#xa;(Dark / Light Mode)" vertex="1">
+          <mxGeometry height="40" width="140" x="70" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="n_cfg_profile" parent="lane7" style="rounded=0;whiteSpace=wrap;html=1;" value="Edit Profil &amp; Password&#xa;(Validasi Simulasi)" vertex="1">
+          <mxGeometry height="40" width="140" x="230" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="n_cfg_users" parent="lane7" style="rounded=0;whiteSpace=wrap;html=1;" value="Manajemen User CRUD&#xa;(Khusus Admin Utama)" vertex="1">
+          <mxGeometry height="40" width="140" x="390" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="n_cfg_widget" parent="lane7" style="rounded=0;whiteSpace=wrap;html=1;" value="Widget Manager&#xa;(Drag &amp; Drop Grid)" vertex="1">
+          <mxGeometry height="40" width="140" x="550" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="n_merge_cfg" parent="lane7" style="rounded=1;whiteSpace=wrap;html=1;" value="Simpan Konfigurasi ke localStorage" vertex="1">
+          <mxGeometry height="35" width="230" x="260" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="e43" edge="1" parent="lane7" source="n_config_fork" target="n_cfg_theme">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e44" edge="1" parent="lane7" source="n_config_fork" target="n_cfg_profile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e45" edge="1" parent="lane7" source="n_config_fork" target="n_cfg_users">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e46" edge="1" parent="lane7" source="n_config_fork" target="n_cfg_widget">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e47" edge="1" parent="lane7" source="n_cfg_theme" target="n_merge_cfg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e48" edge="1" parent="lane7" source="n_cfg_profile" target="n_merge_cfg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e49" edge="1" parent="lane7" source="n_cfg_users" target="n_merge_cfg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e50" edge="1" parent="lane7" source="n_cfg_widget" target="n_merge_cfg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e42" edge="1" parent="1" source="n_export_stats" target="n_config_fork">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane8" parent="1" style="swimlane;html=1;startSize=40;fillColor=none;strokeColor=none;fontStyle=1;align=left;" value="[8] PENCARIAN &amp;amp; FILTER — computed getter &#39;filtered&#39;" vertex="1">
+          <mxGeometry height="560" width="750" x="50" y="2720" as="geometry" />
+        </mxCell>
+        <mxCell id="n_search_input" parent="lane8" style="rounded=0;whiteSpace=wrap;html=1;" value="User Input Query (x-model: query)" vertex="1">
+          <mxGeometry height="40" width="220" x="265" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n_search_suggest" parent="lane8" style="rounded=0;whiteSpace=wrap;html=1;" value="updateSearchSuggestions()&#xa;(Tampilkan Dropdown Saran)" vertex="1">
+          <mxGeometry height="40" width="220" x="265" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="n_get_filtered" parent="lane8" style="rounded=0;whiteSpace=wrap;html=1;" value="get filtered()&#xa;(Filter: query + status + category + year + author)" vertex="1">
+          <mxGeometry height="45" width="300" x="225" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="n_get_paginated" parent="lane8" style="rounded=0;whiteSpace=wrap;html=1;" value="get paginated()&#xa;(Slice data by page &amp; perPage)" vertex="1">
+          <mxGeometry height="40" width="240" x="255" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="n_save_recent" parent="lane8" style="rounded=0;whiteSpace=wrap;html=1;" value="Simpan recentSearches ke localStorage" vertex="1">
+          <mxGeometry height="40" width="240" x="255" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="n_render_table" parent="lane8" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e5ffc4;strokeColor=#82b366;" value="Render Tabel Arsip&#xa;(Paginated Results)" vertex="1">
+          <mxGeometry height="45" width="210" x="270" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="n_end" parent="lane8" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;fontStyle=1" value="SELESAI" vertex="1">
+          <mxGeometry height="40" width="80" x="335" y="485" as="geometry" />
+        </mxCell>
+        <mxCell id="e52" edge="1" parent="lane8" source="n_search_input" target="n_search_suggest">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e53" edge="1" parent="lane8" source="n_search_suggest" target="n_get_filtered">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e54" edge="1" parent="lane8" source="n_get_filtered" target="n_get_paginated">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e55" edge="1" parent="lane8" source="n_get_paginated" target="n_save_recent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e56" edge="1" parent="lane8" source="n_save_recent" target="n_render_table">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e57" edge="1" parent="lane8" source="n_render_table" target="n_end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e51" edge="1" parent="1" source="n_merge_cfg" target="n_search_input">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

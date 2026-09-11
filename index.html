@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SIPARS – Login</title>
+    <title>SIPARS – Masuk ke Sistem Informasi Pengarsipan</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>📁</text></svg>" />
 
@@ -18,14 +18,16 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="style.css" />
 
-    <!-- FOUC Prevention — mirrors admin.html -->
+    <!-- FOUC Prevention — mirrors admin.html theme settings -->
     <script>
         (function () {
             try {
                 var raw = localStorage.getItem('setting_darkMode');
                 var isDark = raw === null ? true
                     : (raw === 'false' || raw === '"false"' ? false : JSON.parse(raw));
-                if (!isDark) document.documentElement.setAttribute('data-theme', 'light');
+                if (!isDark) {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
             } catch (e) { }
         })();
     </script>
@@ -44,11 +46,7 @@
             box-sizing: border-box;
         }
 
-        /* ── Body
-           overflow-y:auto  → page scrolls on short viewports (register form)
-           flex-col         → card is centered horizontally
-           justify-center   → centered vertically when there's room
-        ── */
+        /* ── Body ── */
         body {
             font-family: 'Outfit', system-ui, sans-serif;
             min-height: 100vh;
@@ -86,7 +84,7 @@
             display: none !important;
         }
 
-        /* ── Orbs ── */
+        /* ── Floating Glow Orbs ── */
         .orb {
             position: fixed;
             border-radius: 50%;
@@ -177,7 +175,7 @@
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .auth-card {
             width: 100%;
-            max-width: 25rem;
+            max-width: 25.5rem;
             background: rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -194,7 +192,7 @@
             .auth-card {
                 padding: 2rem;
                 border-radius: 1.75rem;
-                max-width: 26rem;
+                max-width: 26.5rem;
             }
         }
 
@@ -206,7 +204,7 @@
         }
 
         body.light-mode .auth-card {
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.94);
             border-color: rgba(15, 23, 42, 0.10);
             box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
         }
@@ -225,17 +223,6 @@
 
         /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
            INPUT SYSTEM
-           
-           Three dedicated wrapper classes eliminate ALL icon
-           overlap issues without relying on Tailwind pl-* classes
-           that can be overridden by style.css responsive rules.
-           
-           .input-wrap        → left icon only
-           .input-wrap-both   → left icon + right button (eye toggle)
-           .input-wrap-right  → right chevron only (select)
-           
-           Icon zone: 40px from left
-           Eye-toggle zone: 36px from right
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .input-wrap,
         .input-wrap-both,
@@ -243,7 +230,7 @@
             position: relative;
         }
 
-        /* Left icon — fixed position, fixed size container */
+        /* Left icon */
         .input-wrap>.i-left,
         .input-wrap-both>.i-left,
         .input-wrap-right>.i-left {
@@ -252,13 +239,11 @@
             top: 0;
             bottom: 0;
             width: 2.625rem;
-            /* 42px — icon zone */
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: none;
             font-size: 0.8rem;
-            /* consistent icon size */
             color: rgba(255, 255, 255, 0.38);
             z-index: 1;
             flex-shrink: 0;
@@ -277,7 +262,6 @@
             top: 0;
             bottom: 0;
             width: 2.5rem;
-            /* 40px — right touch zone */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -318,16 +302,12 @@
             color: #94a3b8;
         }
 
-        /* ── The actual input field ── */
+        /* Input field styling */
         .input-field {
             width: 100%;
             padding-top: 0.65rem;
             padding-bottom: 0.65rem;
-            /* !important prevents style.css responsive overrides from
-               resetting horizontal padding back to a small value that
-               would cause the left icon to overlap the placeholder text */
             padding-left: 2.625rem !important;
-            /* = .i-left width (42px) */
             padding-right: 0.875rem !important;
             background: rgba(255, 255, 255, 0.07);
             border: 1px solid rgba(255, 255, 255, 0.14);
@@ -340,12 +320,10 @@
             transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
 
-        /* Eye-toggle inputs: right padding clears the button zone */
         .input-wrap-both .input-field {
             padding-right: 2.5rem !important;
         }
 
-        /* Select: right padding clears the chevron */
         .input-wrap-right .input-field {
             padding-right: 2rem !important;
             cursor: pointer;
@@ -353,20 +331,17 @@
             -webkit-appearance: none;
         }
 
-        /* Placeholder */
         .input-field::placeholder {
             color: rgba(255, 255, 255, 0.32);
             font-size: 0.85rem;
         }
 
-        /* Focus ring */
         .input-field:focus {
             border-color: #6366f1;
             background: rgba(99, 102, 241, 0.08);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.20);
         }
 
-        /* Light mode */
         body.light-mode .input-field {
             background: #f8fafc;
             border-color: rgba(15, 23, 42, 0.16);
@@ -457,7 +432,7 @@
             background: rgba(255, 255, 255, 0.05);
             cursor: pointer;
             text-align: left;
-            transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+            transition: background 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.12s;
             min-height: 4.25rem;
             display: flex;
             flex-direction: column;
@@ -466,6 +441,7 @@
 
         .role-card:hover {
             background: rgba(255, 255, 255, 0.10);
+            transform: translateY(-1px);
         }
 
         .role-card.active {
@@ -549,7 +525,7 @@
         }
 
         .cred-body.open {
-            max-height: 8rem;
+            max-height: 16rem;
             padding: 0.625rem 0.875rem 0.75rem;
         }
 
@@ -572,7 +548,7 @@
             background: rgba(99, 102, 241, .15);
             color: #a5b4fc;
             padding: 0.08rem 0.28rem;
-            border-radius: 0.2rem;
+            border-radius: 0.25rem;
             font-size: 0.88em;
             font-family: 'Courier New', monospace;
         }
@@ -601,7 +577,7 @@
         }
 
         .btn-primary:hover:not(:disabled) {
-            opacity: 0.90;
+            opacity: 0.92;
             transform: translateY(-1px);
             box-shadow: 0 6px 22px rgba(79, 70, 229, .50);
         }
@@ -616,7 +592,7 @@
         }
 
         /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           THEME BUTTON (fixed top-right)
+           THEME BUTTON
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .theme-btn {
             position: fixed;
@@ -651,7 +627,7 @@
         }
 
         /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           SECTION ANIMATION
+           ANIMATIONS & ALERTS
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .section-fade {
             animation: sfade 0.22s ease both;
@@ -669,9 +645,6 @@
             }
         }
 
-        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           INLINE ERROR
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .error-box {
             display: flex;
             align-items: flex-start;
@@ -692,9 +665,6 @@
             color: #dc2626;
         }
 
-        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           PASSWORD STRENGTH BARS
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .sbar {
             height: 3px;
             border-radius: 2px;
@@ -702,9 +672,6 @@
             transition: background 0.3s;
         }
 
-        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           SPINNER + SHAKE
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         @keyframes spin-i {
             to {
                 transform: rotate(360deg);
@@ -739,7 +706,7 @@
         }
 
         /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           LIGHT MODE — Tailwind opacity class overrides
+           LIGHT MODE OVERRIDES
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         body.light-mode .text-white {
             color: #0f172a !important;
@@ -805,9 +772,6 @@
             border-color: rgba(16, 185, 129, .50) !important;
         }
 
-        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           SCROLLBAR
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         ::-webkit-scrollbar {
             width: 5px;
             height: 5px;
@@ -828,15 +792,14 @@
     </style>
 </head>
 
-<!-- Alpine on <body> — correct pattern: x-cloak hides body, not <html> -->
-
 <body x-data="authApp()" x-init="init()" x-cloak :class="darkMode ? '' : 'light-mode'">
 
+    <!-- Ambient background orbs -->
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
 
-    <!-- Theme toggle: ☀️ when dark, 🌙 when light — same as admin.html -->
+    <!-- Theme toggle button -->
     <button class="theme-btn" @click="toggleTheme()" :title="darkMode ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'">
         <i :class="darkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'"></i>
     </button>
@@ -844,17 +807,41 @@
     <!-- ═══════════ AUTH CARD ═══════════ -->
     <div class="auth-card" id="authCard">
 
-        <!-- Brand -->
+        <!-- Brand / Header -->
         <div class="text-center mb-5">
             <div
-                class="inline-flex items-center justify-center w-13 h-13 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 shadow-lg shadow-indigo-500/30 mb-3 w-12 h-12">
-                <span class="text-lg">📁</span>
+                class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-sky-500/20 border border-white/10 shadow-lg shadow-indigo-500/20 mb-3 p-2">
+                <img src="logo-removebg-preview (1).png" alt="Logo SIPARS Kominfo Deiyai"
+                    class="w-full h-full object-contain drop-shadow" />
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wide"
-                :class="darkMode ? 'text-white' : 'text-slate-800'">SIPARS</h1>
+                :class="darkMode ? 'text-white' : 'text-slate-800'">
+                ARSIP KOMINFO
+                <span class="block text-indigo-400 text-xl tracking-widest font-mono font-bold mt-0.5">DEIYAI</span>
+            </h1>
             <p class="text-xs mt-1 leading-relaxed" :class="darkMode ? 'text-white/50' : 'text-slate-500'">
                 Sistem Informasi Pengarsipan<br>Dinas Kominfo Kabupaten Deiyai
             </p>
+        </div>
+
+        <!-- Active Session Banner (if user already logged in) -->
+        <div x-show="existingSession" x-transition
+            class="mb-4 p-3 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 truncate pr-2">
+                <span class="text-base flex-shrink-0" x-text="roleEmojis[existingSession?.role] || '👤'"></span>
+                <div class="leading-tight truncate">
+                    <p class="font-semibold" :class="darkMode ? 'text-white' : 'text-slate-800'">
+                        Sesi Aktif: <span x-text="existingSession?.name || existingSession?.role"></span>
+                    </p>
+                    <p class="text-[11px]" :class="darkMode ? 'text-indigo-300' : 'text-indigo-600'"
+                        x-text="existingSession?.role"></p>
+                </div>
+            </div>
+            <a href="admin.html"
+                class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-1.5 flex-shrink-0">
+                <span>Dashboard</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
         </div>
 
         <!-- Tabs -->
@@ -867,28 +854,42 @@
             </button>
         </div>
 
-        <!-- ═══════ LOGIN ═══════ -->
+        <!-- ═══════ LOGIN TAB ═══════ -->
         <div x-show="tab==='login'" x-cloak class="section-fade">
 
-            <!-- Collapsible credential hint -->
+            <!-- Collapsible credential hint with Quick-Fill -->
             <div class="mb-4">
                 <button type="button" class="cred-toggle" :class="showCreds?'open':''" @click="showCreds=!showCreds">
                     <span class="flex items-center gap-1.5">
                         <i class="fa-solid fa-circle-info text-xs"></i>
-                        Akun Default Tersedia
+                        <span>Akun Default (Klik untuk Mengisi)</span>
                     </span>
                     <i class="fa-solid text-xs transition-transform duration-200"
                         :class="showCreds ? 'fa-chevron-up rotate-0' : 'fa-chevron-down'"></i>
                 </button>
                 <div class="cred-body" :class="showCreds?'open':'closed'">
-                    <p>👑 <strong>Admin:</strong> admin@kominfo.go.id / <code>Admin@123</code></p>
-                    <p>⚙️ <strong>Operator:</strong> operator@kominfo.go.id / <code>Operator@123</code></p>
-                    <p>👤 <strong>User:</strong> user@deiyai.go.id / <code>User@123</code></p>
-                    <p>👁️ <strong>Viewer:</strong> viewer@deiyai.go.id / <code>Viewer@123</code></p>
+                    <div class="space-y-1.5 py-1">
+                        <template x-for="u in defaultUsers.slice(0, 4)" :key="u.role">
+                            <div @click="quickFill(u)"
+                                class="flex items-center justify-between p-1.5 rounded-md hover:bg-indigo-500/20 active:scale-[0.99] cursor-pointer transition group"
+                                :title="'Klik untuk otomatis mengisi sebagai ' + u.role">
+                                <div class="flex items-center gap-1.5 truncate">
+                                    <span x-text="roleEmojis[u.role] || '👤'"></span>
+                                    <strong class="font-medium" x-text="u.role + ':'"></strong>
+                                    <span class="opacity-80 text-[11px] truncate" x-text="u.email"></span>
+                                </div>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <code x-text="u.password"></code>
+                                    <i
+                                        class="fa-solid fa-arrow-turn-down text-[10px] text-indigo-400 opacity-60 group-hover:opacity-100 transition"></i>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
 
-            <!-- Role cards -->
+            <!-- Role Selection Cards -->
             <div class="mb-4">
                 <label class="field-label">Pilih Role</label>
                 <div class="grid grid-cols-2 gap-2">
@@ -930,13 +931,13 @@
                 </div>
             </div>
 
-            <!-- Error -->
+            <!-- Inline Error -->
             <div x-show="login.error" x-transition class="error-box">
                 <i class="fa-solid fa-triangle-exclamation flex-shrink-0 mt-0.5 text-xs"></i>
                 <span x-text="login.error"></span>
             </div>
 
-            <!-- Submit -->
+            <!-- Submit Button -->
             <button class="btn-primary" @click="submitLogin()" :disabled="loading">
                 <template x-if="loading">
                     <span><i class="fa-solid fa-circle-notch spin mr-2"></i>Memverifikasi...</span>
@@ -946,6 +947,7 @@
                 </template>
             </button>
 
+            <!-- Links -->
             <div class="flex justify-between mt-3 text-xs" :class="darkMode?'text-indigo-400':'text-indigo-600'">
                 <a href="#" @click.prevent="showForgotPassword()" class="hover:underline underline-offset-2">
                     <i class="fa-solid fa-key mr-1"></i>Lupa password?
@@ -956,10 +958,10 @@
             </div>
         </div>
 
-        <!-- ═══════ REGISTER ═══════ -->
+        <!-- ═══════ REGISTER TAB ═══════ -->
         <div x-show="tab==='register'" x-cloak class="section-fade space-y-3">
 
-            <!-- Nama -->
+            <!-- Nama Lengkap -->
             <div>
                 <label class="field-label">Nama Lengkap</label>
                 <div class="input-wrap">
@@ -979,7 +981,7 @@
                 </div>
             </div>
 
-            <!-- Role + Password (2-col on sm+) -->
+            <!-- Role + Password (2 cols on sm+) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="field-label">Role</label>
@@ -1006,7 +1008,7 @@
                 </div>
             </div>
 
-            <!-- Strength bars -->
+            <!-- Password Strength Bar -->
             <div x-show="reg.pass.length > 0" class="!mt-1">
                 <div class="flex gap-1 mb-1">
                     <template x-for="i in 4" :key="i">
@@ -1037,7 +1039,7 @@
                 </div>
             </div>
 
-            <!-- Submit -->
+            <!-- Submit Register -->
             <button class="btn-primary !mt-1" @click="submitRegister()" :disabled="loading">
                 <template x-if="loading">
                     <span><i class="fa-solid fa-circle-notch spin mr-2"></i>Mendaftarkan...</span>
@@ -1054,12 +1056,16 @@
             </p>
         </div>
 
-    </div><!-- /auth-card -->
+    </div><!-- /authCard -->
 
     <script>
         function authApp() {
             return {
-                tab: 'login', darkMode: true, loading: false, showCreds: false,
+                tab: 'login',
+                darkMode: true,
+                loading: false,
+                showCreds: false,
+                existingSession: null,
 
                 roles: [
                     { role: 'Admin Utama', label: 'Admin Utama', emoji: '👑', desc: 'Akses penuh' },
@@ -1068,6 +1074,13 @@
                     { role: 'Viewer', label: 'Viewer', emoji: '👁', desc: 'Baca saja' },
                 ],
 
+                roleEmojis: {
+                    'Admin Utama': '👑',
+                    'Operator Kominfo': '⚙',
+                    'User Unit': '👤',
+                    'Viewer': '👁'
+                },
+
                 defaultUsers: [
                     { email: 'admin@kominfo.go.id', password: 'Admin@123', role: 'Admin Utama', name: 'Administrator' },
                     { email: 'operator@kominfo.go.id', password: 'Operator@123', role: 'Operator Kominfo', name: 'Operator Kominfo' },
@@ -1075,26 +1088,67 @@
                     { email: 'viewer@deiyai.go.id', password: 'Viewer@123', role: 'Viewer', name: 'Viewer' },
                 ],
 
-                login: { role: 'Admin Utama', email: 'admin@kominfo.go.id', pass: '', showPass: false, error: '' },
-                reg: { name: '', email: '', pass: '', pass2: '', role: 'Operator Kominfo', showPass: false, showPass2: false },
+                login: {
+                    role: 'Admin Utama',
+                    email: 'admin@kominfo.go.id',
+                    pass: 'Admin@123',
+                    showPass: false,
+                    error: ''
+                },
+
+                reg: {
+                    name: '',
+                    email: '',
+                    pass: '',
+                    pass2: '',
+                    role: 'Operator Kominfo',
+                    showPass: false,
+                    showPass2: false
+                },
+
                 passwordStrength: { score: 0, label: '' },
 
                 init() {
+                    // Theme initialization matching admin.html & arsip.js
                     const raw = localStorage.getItem('setting_darkMode');
                     if (raw !== null) {
-                        try { this.darkMode = JSON.parse(raw); }
-                        catch (e) { this.darkMode = raw !== 'false'; }
+                        try {
+                            this.darkMode = JSON.parse(raw);
+                        } catch (e) {
+                            this.darkMode = raw !== 'false';
+                        }
                     }
-                    document.documentElement.removeAttribute('data-theme');
+
+                    if (!this.darkMode) {
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        document.body.classList.add('light-mode');
+                    } else {
+                        document.documentElement.removeAttribute('data-theme');
+                        document.body.classList.remove('light-mode');
+                    }
+
+                    // Check existing session
+                    const savedRole = localStorage.getItem('userRole');
+                    const savedProfile = localStorage.getItem('userProfile');
+                    if (savedRole && savedProfile) {
+                        try {
+                            this.existingSession = { role: savedRole, ...JSON.parse(savedProfile) };
+                        } catch (e) {
+                            this.existingSession = { role: savedRole };
+                        }
+                    }
+
                     // Show creds open on desktop, closed on mobile
                     this.showCreds = window.innerWidth >= 640;
+
                     // Load persisted registered users
                     const saved = localStorage.getItem('registeredUsers');
                     if (saved) {
                         try {
                             JSON.parse(saved).forEach(u => {
-                                if (!this.defaultUsers.find(d => d.email === u.email))
+                                if (!this.defaultUsers.find(d => d.email.toLowerCase() === u.email.toLowerCase())) {
                                     this.defaultUsers.push(u);
+                                }
                             });
                         } catch (e) { }
                     }
@@ -1102,8 +1156,13 @@
 
                 toggleTheme() {
                     this.darkMode = !this.darkMode;
-                    if (this.darkMode) document.documentElement.removeAttribute('data-theme');
-                    else document.documentElement.setAttribute('data-theme', 'light');
+                    if (this.darkMode) {
+                        document.documentElement.removeAttribute('data-theme');
+                        document.body.classList.remove('light-mode');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        document.body.classList.add('light-mode');
+                    }
                     localStorage.setItem('setting_darkMode', JSON.stringify(this.darkMode));
                 },
 
@@ -1111,71 +1170,175 @@
                     this.login.role = role;
                     this.login.error = '';
                     const u = this.defaultUsers.find(u => u.role === role);
-                    if (u) { this.login.email = u.email; this.login.pass = ''; }
+                    if (u) {
+                        this.login.email = u.email;
+                        this.login.pass = u.password;
+                    }
+                },
+
+                quickFill(user) {
+                    this.login.role = user.role;
+                    this.login.email = user.email;
+                    this.login.pass = user.password;
+                    this.login.error = '';
                 },
 
                 submitLogin() {
                     this.login.error = '';
-                    if (!this.login.email.trim() || !this.login.pass.trim()) { this.login.error = 'Email dan password harus diisi.'; return; }
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.login.email)) { this.login.error = 'Format email tidak valid.'; return; }
+                    if (!this.login.email.trim() || !this.login.pass.trim()) {
+                        this.login.error = 'Email dan password harus diisi.';
+                        return;
+                    }
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.login.email)) {
+                        this.login.error = 'Format email tidak valid.';
+                        return;
+                    }
                     this.loading = true;
                     setTimeout(() => {
                         const em = this.login.email.trim().toLowerCase();
-                        const matched = this.defaultUsers.find(u => u.email.toLowerCase() === em && u.password === this.login.pass && u.role === this.login.role);
+                        const matched = this.defaultUsers.find(u =>
+                            u.email.toLowerCase() === em &&
+                            u.password === this.login.pass &&
+                            u.role === this.login.role
+                        );
                         this.loading = false;
+
                         if (!matched) {
                             const byEmail = this.defaultUsers.find(u => u.email.toLowerCase() === em);
-                            if (!byEmail) this.login.error = 'Email tidak terdaftar di sistem.';
-                            else {
+                            if (!byEmail) {
+                                this.login.error = 'Email tidak terdaftar di sistem.';
+                            } else {
                                 const byRole = this.defaultUsers.find(u => u.email.toLowerCase() === em && u.role === this.login.role);
                                 this.login.error = !byRole ? `Email ini bukan role "${this.login.role}".` : 'Password salah. Coba lagi.';
                             }
                             const card = document.getElementById('authCard');
-                            if (card) { card.classList.add('shake'); setTimeout(() => card.classList.remove('shake'), 450); }
+                            if (card) {
+                                card.classList.add('shake');
+                                setTimeout(() => card.classList.remove('shake'), 450);
+                            }
                             return;
                         }
+
+                        // Store session
                         localStorage.setItem('userRole', matched.role);
                         localStorage.setItem('userProfile', JSON.stringify({
-                            name: matched.name, email: matched.email, role: matched.role,
-                            status: 'Aktif', phone: '',
+                            name: matched.name,
+                            email: matched.email,
+                            role: matched.role,
+                            status: 'Aktif',
+                            phone: '',
                             joinDate: new Date().toLocaleDateString('id-ID'),
                             lastLogin: new Date().toLocaleString('id-ID')
                         }));
-                        const desc = { 'Admin Utama': 'Akses penuh ke semua fitur arsip', 'Operator Kominfo': 'Mengelola dan verifikasi dokumen', 'User Unit': 'Akses melihat dan meminjam dokumen', 'Viewer': 'Akses baca saja' };
+
+                        const desc = {
+                            'Admin Utama': 'Akses penuh ke semua fitur arsip',
+                            'Operator Kominfo': 'Mengelola dan verifikasi dokumen',
+                            'User Unit': 'Akses melihat dan meminjam dokumen',
+                            'Viewer': 'Akses baca saja'
+                        };
+
                         Swal.fire({
-                            icon: 'success', title: `Selamat datang, ${matched.name}! 👋`,
+                            icon: 'success',
+                            title: `Selamat datang, ${matched.name}! 👋`,
                             html: `<span style="color:#6366f1;font-weight:600">${matched.role}</span><br><small style="color:#94a3b8">${desc[matched.role] || ''}</small>`,
-                            timer: 1800, showConfirmButton: false,
+                            timer: 1600,
+                            showConfirmButton: false,
                             background: this.darkMode ? '#0f1a35' : '#ffffff',
                             color: this.darkMode ? '#f1f5f9' : '#1e293b',
-                        }).then(() => { window.location.href = 'admin.html'; });
-                    }, 480);
+                        }).then(() => {
+                            window.location.href = 'admin.html';
+                        });
+                    }, 450);
                 },
 
                 submitRegister() {
-                    const swal = (icon, title, text) => Swal.fire({ icon, title, text, confirmButtonColor: '#6366f1', background: this.darkMode ? '#0f1a35' : '#fff', color: this.darkMode ? '#f1f5f9' : '#1e293b' });
-                    if (!this.reg.name.trim() || !this.reg.email.trim() || !this.reg.pass || !this.reg.pass2) return swal('warning', 'Data Tidak Lengkap', 'Semua field harus diisi!');
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.reg.email)) return swal('error', 'Email Tidak Valid', 'Format email salah.');
-                    if (this.defaultUsers.find(u => u.email.toLowerCase() === this.reg.email.toLowerCase())) return swal('error', 'Email Sudah Terdaftar', 'Email sudah digunakan. Silakan login.');
-                    if (this.reg.pass.length < 8) return swal('warning', 'Password Terlalu Pendek', 'Minimal 8 karakter.');
-                    if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(this.reg.pass)) return swal('warning', 'Password Lemah', 'Harus mengandung huruf dan angka.');
-                    if (this.reg.pass !== this.reg.pass2) return swal('error', 'Password Tidak Cocok', 'Konfirmasi tidak sesuai.');
+                    const swal = (icon, title, text) => Swal.fire({
+                        icon,
+                        title,
+                        text,
+                        confirmButtonColor: '#6366f1',
+                        background: this.darkMode ? '#0f1a35' : '#fff',
+                        color: this.darkMode ? '#f1f5f9' : '#1e293b'
+                    });
+
+                    if (!this.reg.name.trim() || !this.reg.email.trim() || !this.reg.pass || !this.reg.pass2) {
+                        return swal('warning', 'Data Tidak Lengkap', 'Semua field harus diisi!');
+                    }
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.reg.email)) {
+                        return swal('error', 'Email Tidak Valid', 'Format email salah.');
+                    }
+                    if (this.defaultUsers.find(u => u.email.toLowerCase() === this.reg.email.toLowerCase())) {
+                        return swal('error', 'Email Sudah Terdaftar', 'Email sudah digunakan. Silakan login.');
+                    }
+                    if (this.reg.pass.length < 8) {
+                        return swal('warning', 'Password Terlalu Pendek', 'Minimal 8 karakter.');
+                    }
+                    if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(this.reg.pass)) {
+                        return swal('warning', 'Password Lemah', 'Harus mengandung huruf dan angka.');
+                    }
+                    if (this.reg.pass !== this.reg.pass2) {
+                        return swal('error', 'Password Tidak Cocok', 'Konfirmasi tidak sesuai.');
+                    }
+
                     this.loading = true;
                     setTimeout(() => {
-                        const u = { email: this.reg.email.trim().toLowerCase(), password: this.reg.pass, role: this.reg.role, name: this.reg.name.trim() };
-                        try { const ex = localStorage.getItem('registeredUsers'); const l = ex ? JSON.parse(ex) : []; l.push(u); localStorage.setItem('registeredUsers', JSON.stringify(l)); } catch (e) { }
-                        this.defaultUsers.push(u);
-                        localStorage.setItem('userRole', u.role);
-                        localStorage.setItem('userProfile', JSON.stringify({ name: u.name, email: u.email, role: u.role, status: 'Aktif', phone: '', joinDate: new Date().toLocaleDateString('id-ID'), lastLogin: new Date().toLocaleString('id-ID') }));
+                        const newUser = {
+                            email: this.reg.email.trim().toLowerCase(),
+                            password: this.reg.pass,
+                            role: this.reg.role,
+                            name: this.reg.name.trim()
+                        };
+
+                        // Persist to registeredUsers for login check
+                        try {
+                            const ex = localStorage.getItem('registeredUsers');
+                            const l = ex ? JSON.parse(ex) : [];
+                            l.push(newUser);
+                            localStorage.setItem('registeredUsers', JSON.stringify(l));
+                        } catch (e) { }
+
+                        // Also synchronize with siparsUsers for admin.html user management table
+                        try {
+                            const exAdmin = localStorage.getItem('siparsUsers');
+                            const adminList = exAdmin ? JSON.parse(exAdmin) : [];
+                            const newId = (adminList.length > 0 ? Math.max(...adminList.map(u => u.id || 0)) : 6) + 1;
+                            adminList.push({
+                                id: newId,
+                                name: newUser.name,
+                                email: newUser.email,
+                                role: newUser.role,
+                                status: 'Aktif',
+                                joinDate: new Date().toISOString().split('T')[0]
+                            });
+                            localStorage.setItem('siparsUsers', JSON.stringify(adminList));
+                        } catch (e) { }
+
+                        this.defaultUsers.push(newUser);
+                        localStorage.setItem('userRole', newUser.role);
+                        localStorage.setItem('userProfile', JSON.stringify({
+                            name: newUser.name,
+                            email: newUser.email,
+                            role: newUser.role,
+                            status: 'Aktif',
+                            phone: '',
+                            joinDate: new Date().toLocaleDateString('id-ID'),
+                            lastLogin: new Date().toLocaleString('id-ID')
+                        }));
+
                         this.loading = false;
                         Swal.fire({
-                            icon: 'success', title: 'Akun Berhasil Dibuat! 🎉',
-                            html: `Selamat datang, <strong>${u.name}</strong>!<br><small style="color:#94a3b8">Role: ${u.role}</small>`,
-                            timer: 1800, showConfirmButton: false,
+                            icon: 'success',
+                            title: 'Akun Berhasil Dibuat! 🎉',
+                            html: `Selamat datang, <strong>${newUser.name}</strong>!<br><small style="color:#94a3b8">Role: ${newUser.role}</small>`,
+                            timer: 1600,
+                            showConfirmButton: false,
                             background: this.darkMode ? '#0f1a35' : '#ffffff',
                             color: this.darkMode ? '#f1f5f9' : '#1e293b',
-                        }).then(() => { window.location.href = 'admin.html'; });
-                    }, 560);
+                        }).then(() => {
+                            window.location.href = 'admin.html';
+                        });
+                    }, 500);
                 },
 
                 checkPasswordStrength(p) {
@@ -1184,10 +1347,12 @@
                     if (/[A-Z]/.test(p)) s++;
                     if (/[0-9]/.test(p)) s++;
                     if (/[^a-zA-Z0-9]/.test(p)) s++;
-                    this.passwordStrength = { score: s, label: ['', 'Lemah', 'Cukup', 'Kuat', 'Sangat Kuat'][s] || 'Lemah' };
+                    this.passwordStrength = {
+                        score: s,
+                        label: ['', 'Lemah', 'Cukup', 'Kuat', 'Sangat Kuat'][s] || 'Lemah'
+                    };
                 },
 
-                // ── Strength bar colour for bar index i (1-4) ──
                 strengthBarClass(i) {
                     const s = this.passwordStrength.score;
                     if (i > s) return this.darkMode ? 'bg-white/10' : 'bg-slate-200';
@@ -1197,7 +1362,6 @@
                     return 'bg-emerald-400';
                 },
 
-                // ── Strength label colour ──
                 strengthLabelClass() {
                     const s = this.passwordStrength.score;
                     if (s <= 1) return 'text-red-400';
@@ -1205,28 +1369,27 @@
                     return 'text-emerald-400';
                 },
 
-                // ── Confirm-password input border/bg class ──
                 pass2Class() {
                     if (!this.reg.pass2) return '';
                     if (this.reg.pass !== this.reg.pass2) return '!border-red-500/70 !bg-red-500/5';
                     return '!border-emerald-500/70 !bg-emerald-500/5';
                 },
 
-                // ── Show mismatch hint ──
                 pass2Mismatch() {
                     return this.reg.pass2.length > 0 && this.reg.pass !== this.reg.pass2;
                 },
 
-                // ── Show match hint ──
                 pass2Match() {
                     return this.reg.pass2.length > 0 && this.reg.pass === this.reg.pass2;
                 },
 
                 showForgotPassword() {
                     Swal.fire({
-                        icon: 'info', title: 'Lupa Password?',
-                        html: `Hubungi administrator untuk reset password.<br><br><strong>Kontak:</strong><br>📧 admin@kominfo.deiyai.go.id<br>📞 (0981) xxx-xxxx`,
-                        confirmButtonText: 'Mengerti', confirmButtonColor: '#6366f1',
+                        icon: 'info',
+                        title: 'Lupa Password?',
+                        html: `Hubungi administrator untuk reset password akun Anda.<br><br><strong>Kontak Layanan:</strong><br>📧 admin@kominfo.deiyai.go.id<br>📞 (0981) xxx-xxxx`,
+                        confirmButtonText: 'Mengerti',
+                        confirmButtonColor: '#6366f1',
                         background: this.darkMode ? '#0f1a35' : '#ffffff',
                         color: this.darkMode ? '#f1f5f9' : '#1e293b',
                     });
